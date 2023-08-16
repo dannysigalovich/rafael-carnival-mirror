@@ -24,9 +24,9 @@ int isCircularBufferEmpty(CircularBuffer *cb) {
 }
 
 int writeToBuff(CircularBuffer *cb, const char *buff, uint32_t size) {
-    if (isCircularBufferFull(cb)) {
-        return ERR_MEM; // Buffer is full, cannot write
-    }
+//    if (isCircularBufferFull(cb)) { // ############################### uncomment this if you want to not overwrite msg in the buffer
+//        return ERR_MEM; // Buffer is full, cannot write
+//    }
 
     for (uint32_t i = 0; i < size; i++) {
         cb->data[cb->head] = buff[i];

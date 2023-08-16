@@ -26,6 +26,8 @@
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
 extern ETH_HandleTypeDef EthHandle;
+/* I2C handler declared in "main.c" file */
+extern I2C_HandleTypeDef I2cHandle;
 /* Private function prototypes -----------------------------------------------*/
 void ETH_IRQHandler(void);
 /* Private functions ---------------------------------------------------------*/

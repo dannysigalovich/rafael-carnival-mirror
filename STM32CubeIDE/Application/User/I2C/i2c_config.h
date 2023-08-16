@@ -11,6 +11,8 @@
 
 #include "stm32h7xx_hal.h"
 #include "stm32h7xx_nucleo.h"
+#include "cmsis_os.h"
+#include "main.h"
 
 
 /* User can use this section to tailor I2Cx/I2Cx instance used and associated
@@ -49,10 +51,12 @@
 /* This example use TIMING to 0x00901954 to reach 400 kHz speed (Rise time = 100 ns, Fall time = 10 ns) */
 #define I2C_TIMING      0x00901954
 
+#define I2C_HANDLE_THREAD_PRIO    ( osPriorityHigh )
+
 
 void I2C_Init();
 
-int I2C_start_listen();
+void I2C_start_listen();
 
 
 #endif /* APPLICATION_USER_I2C_I2C_C_ */

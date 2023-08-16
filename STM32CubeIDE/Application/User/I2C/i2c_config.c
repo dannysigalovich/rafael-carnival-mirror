@@ -5,18 +5,22 @@
  *      Author: eladsez
  */
 
+#include "ICD/ICD.h"
 #include "I2C/i2c_config.h"
-#include "main.h"
-
+#include "lwip/arch.h"
+#include "lwip/api.h"
+#include "lwip/apps/fs.h"
 
 /* I2C handler declaration */
 I2C_HandleTypeDef I2cHandle;
 
 /* Buffer used for transmission */
 uint8_t aTxBuffer[TXBUFFERSIZE];
-
 /* Buffer used for reception */
 uint8_t aRxBuffer[RXBUFFERSIZE];
+
+void I2Cx_ER_IRQHandler(void);
+void I2Cx_EV_IRQHandler(void);
 
 void I2C_Init(){
 
@@ -42,11 +46,9 @@ void I2C_Init(){
 }
 
 
-int I2C_start_listen(){
-
+void I2C_start_listen(){
+	sys_thread_new("I2C_handle", ICD_handle, NULL, DEFAULT_THREAD_STACKSIZE, I2C_HANDLE_THREAD_PRIO);
 }
-
-
 
 
 
@@ -121,4 +123,29 @@ void HAL_I2C_MspDeInit(I2C_HandleTypeDef *hi2c)
   /*##-3- Disable the NVIC for I2C ##########################################*/
   HAL_NVIC_DisableIRQ(I2Cx_ER_IRQn);
   HAL_NVIC_DisableIRQ(I2Cx_EV_IRQn);
+}
+
+
+
+
+/**
+  * @brief  This function handles I2C event interrupt request.
+  * @param  None
+  * @retval None
+  * @Note   This function is redefined in "main.h" and related to I2C data transmission
+  */
+void I2Cx_EV_IRQHandler(void)
+{
+  HAL_I2C_EV_IRQHandler(&I2cHandle);
+}
+
+/**
+  * @brief  This function handles I2C error interrupt request.
+  * @param  None
+  * @retval None
+  * @Note   This function is redefined in "main.h" and related to I2C error
+  */
+void I2Cx_ER_IRQHandler(void)
+{
+  HAL_I2C_ER_IRQHandler(&I2cHandle);
 }

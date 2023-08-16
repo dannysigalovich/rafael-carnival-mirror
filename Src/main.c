@@ -27,6 +27,7 @@
 #include "lwip/tcpip.h"
 #include "app_ethernet.h"
 #include "Novatel/navMesseging.h"
+#include "I2C/i2c_config.h"
 
 #define TREGO_DEBUG
 
@@ -81,6 +82,8 @@ int main(void)
   MX_USART2_UART_Init();
 #endif
 
+  I2C_Init();
+
   /* Init thread */
   osThreadDef(Start, StartThread, osPriorityNormal, 0, configMINIMAL_STACK_SIZE * 4);
   osThreadCreate (osThread(Start), NULL);
@@ -106,6 +109,9 @@ static void StartThread(void const * argument)
   Netif_Config();
 
   init_CPT7_broker();
+
+  I2C_start_listen();
+
 
   for( ;; )
   {
