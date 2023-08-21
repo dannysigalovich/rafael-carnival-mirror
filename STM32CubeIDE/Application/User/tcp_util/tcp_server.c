@@ -5,12 +5,13 @@
  *      Author: eladsez
  */
 
-#include "tcp_util/tcp_echo_server.h"
+#include <tcp_util/tcp_server.h>
 #include "CyclicBuffer/cyBuff.h"
 #include "lwip/debug.h"
 #include "lwip/stats.h"
 #include "lwip/tcp.h"
 #include "lwip/sys.h"
+#include "Novatel/navMesseging.h"
 
 #if LWIP_TCP
 
@@ -18,7 +19,7 @@ static struct tcp_pcb *tcp_server_pcb;
 CircularBuffer CPTcircularBuff;
 
 /* ECHO protocol states */
-enum tcp_echoserver_states
+enum tcp_server_states
 {
   ES_NONE = 0,
   ES_ACCEPTED,
@@ -28,7 +29,7 @@ enum tcp_echoserver_states
 
 /* structure for maintaining connection infos to be passed as argument
    to LwIP callbacks*/
-struct tcp_echoserver_struct
+struct tcp_server_struct
 {
   u8_t state;             /* current connection state */
   u8_t retries;
@@ -42,8 +43,8 @@ static err_t tcp_callback_recv(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, 
 static void tcp_callback_error(void *arg, err_t err);
 static err_t tcp_callback_poll(void *arg, struct tcp_pcb *tpcb);
 static err_t tcp_callback_sent(void *arg, struct tcp_pcb *tpcb, u16_t len);
-static void tcp_echoserver_send(struct tcp_pcb *tpcb, struct tcp_echoserver_struct *es);
-static void tcp_echoserver_connection_close(struct tcp_pcb *tpcb, struct tcp_echoserver_struct *es);
+static void tcp_server_send(struct tcp_pcb *tpcb, struct tcp_server_struct *es);
+static void tcp_server_connection_close(struct tcp_pcb *tpcb, struct tcp_server_struct *es);
 
 
 /**
@@ -51,7 +52,7 @@ static void tcp_echoserver_connection_close(struct tcp_pcb *tpcb, struct tcp_ech
   * @param  None
   * @retval None
   */
-void tcp_echoserver_init(void* arg)
+void tcp_server_init(void* arg)
 {
   /* create new tcp pcb */
   tcp_server_pcb = tcp_new();
@@ -93,7 +94,7 @@ void tcp_echoserver_init(void* arg)
 static err_t tcp_callback_accept(void *arg, struct tcp_pcb *newpcb, err_t err)
 {
   err_t ret_err;
-  struct tcp_echoserver_struct *es;
+  struct tcp_server_struct *es;
 
   LWIP_UNUSED_ARG(arg);
   LWIP_UNUSED_ARG(err);
@@ -102,7 +103,7 @@ static err_t tcp_callback_accept(void *arg, struct tcp_pcb *newpcb, err_t err)
   tcp_setprio(newpcb, TCP_PRIO_MIN);
 
   /* allocate structure es to maintain tcp connection information */
-  es = (struct tcp_echoserver_struct *)mem_malloc(sizeof(struct tcp_echoserver_struct));
+  es = (struct tcp_server_struct *)mem_malloc(sizeof(struct tcp_server_struct));
   if (es != NULL)
   {
     es->state = ES_ACCEPTED;
@@ -127,7 +128,7 @@ static err_t tcp_callback_accept(void *arg, struct tcp_pcb *newpcb, err_t err)
   else
   {
     /*  close tcp connection */
-    tcp_echoserver_connection_close(newpcb, es);
+    tcp_server_connection_close(newpcb, es);
     /* return memory error */
     ret_err = ERR_MEM;
   }
@@ -145,12 +146,12 @@ static err_t tcp_callback_accept(void *arg, struct tcp_pcb *newpcb, err_t err)
   */
 static err_t tcp_callback_recv(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_t err)
 {
-  struct tcp_echoserver_struct *es;
+  struct tcp_server_struct *es;
   err_t ret_err;
 
   LWIP_ASSERT("arg != NULL",arg != NULL);
 
-  es = (struct tcp_echoserver_struct *)arg;
+  es = (struct tcp_server_struct *)arg;
 
   /* if we receive an empty tcp frame from client => close connection */
   if (p == NULL)
@@ -160,7 +161,7 @@ static err_t tcp_callback_recv(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, 
     if(es->p == NULL)
     {
        /* we're done sending, close connection */
-       tcp_echoserver_connection_close(tpcb, es);
+       tcp_server_connection_close(tpcb, es);
     }
     else
     {
@@ -169,7 +170,7 @@ static err_t tcp_callback_recv(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, 
       tcp_sent(tpcb, tcp_callback_sent);
 
       /* send remaining data*/
-      tcp_echoserver_send(tpcb, es);
+      tcp_server_send(tpcb, es);
     }
     ret_err = ERR_OK;
   }
@@ -196,7 +197,7 @@ static err_t tcp_callback_recv(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, 
     tcp_sent(tpcb, tcp_callback_sent);
 
     /* send back the received data (echo) */
-    tcp_echoserver_send(tpcb, es);
+    tcp_server_send(tpcb, es);
 
     ret_err = ERR_OK;
   }
@@ -208,7 +209,7 @@ static err_t tcp_callback_recv(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, 
       es->p = p;
 
       /* send back received data */
-      tcp_echoserver_send(tpcb, es);
+      tcp_server_send(tpcb, es);
     }
     else
     {
@@ -248,11 +249,11 @@ static err_t tcp_callback_recv(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, 
   */
 static void tcp_callback_error(void *arg, err_t err)
 {
-  struct tcp_echoserver_struct *es;
+  struct tcp_server_struct *es;
 
   LWIP_UNUSED_ARG(err);
 
-  es = (struct tcp_echoserver_struct *)arg;
+  es = (struct tcp_server_struct *)arg;
   if (es != NULL)
   {
     /*  free es structure */
@@ -269,16 +270,16 @@ static void tcp_callback_error(void *arg, err_t err)
 static err_t tcp_callback_poll(void *arg, struct tcp_pcb *tpcb)
 {
   err_t ret_err;
-  struct tcp_echoserver_struct *es;
+  struct tcp_server_struct *es;
 
-  es = (struct tcp_echoserver_struct *)arg;
+  es = (struct tcp_server_struct *)arg;
   if (es != NULL)
   {
     if (es->p != NULL)
     {
       tcp_sent(tpcb, tcp_callback_sent);
       /* there is a remaining pbuf (chain) , try to send data */
-      tcp_echoserver_send(tpcb, es);
+      tcp_server_send(tpcb, es);
     }
     else
     {
@@ -286,7 +287,7 @@ static err_t tcp_callback_poll(void *arg, struct tcp_pcb *tpcb)
       if(es->state == ES_CLOSING)
       {
         /*  close tcp connection */
-        tcp_echoserver_connection_close(tpcb, es);
+        tcp_server_connection_close(tpcb, es);
       }
     }
     ret_err = ERR_OK;
@@ -308,24 +309,24 @@ static err_t tcp_callback_poll(void *arg, struct tcp_pcb *tpcb)
   */
 static err_t tcp_callback_sent(void *arg, struct tcp_pcb *tpcb, u16_t len)
 {
-  struct tcp_echoserver_struct *es;
+  struct tcp_server_struct *es;
 
   LWIP_UNUSED_ARG(len);
 
-  es = (struct tcp_echoserver_struct *)arg;
+  es = (struct tcp_server_struct *)arg;
   es->retries = 0;
 
   if(es->p != NULL)
   {
     /* still got pbufs to send */
     tcp_sent(tpcb, tcp_callback_sent);
-    tcp_echoserver_send(tpcb, es);
+    tcp_server_send(tpcb, es);
   }
   else
   {
     /* if no more data to send and client closed connection*/
     if(es->state == ES_CLOSING)
-      tcp_echoserver_connection_close(tpcb, es);
+      tcp_server_connection_close(tpcb, es);
   }
   return ERR_OK;
 }
@@ -337,7 +338,7 @@ static err_t tcp_callback_sent(void *arg, struct tcp_pcb *tpcb, u16_t len)
   * @param  es: pointer on echo_state structure
   * @retval None
   */
-static void tcp_echoserver_send(struct tcp_pcb *tpcb, struct tcp_echoserver_struct *es)
+static void tcp_server_send(struct tcp_pcb *tpcb, struct tcp_server_struct *es)
 {
   struct pbuf *ptr;
   err_t wr_err = ERR_OK;
@@ -351,8 +352,9 @@ static void tcp_echoserver_send(struct tcp_pcb *tpcb, struct tcp_echoserver_stru
     ptr = es->p;
 
     /* enqueue data for transmission */
-//    wr_err = tcp_write(tpcb, ptr->payload, ptr->len, 1); // Elad: comment this because we are not sending anything to the client (yet)
-    wr_err = writeToBuff(&CPTcircularBuff, ptr->payload, ptr->len); // Elad: add the received buffer to the Cyclic buffer for processing
+//    wr_err = tcp_write(tpcb, ptr->payload, ptr->len, 1); // Elad: comment this because we are not sending anything to the client
+
+    wr_err = writeToBuff(&CPTcircularBuff, (INSPVA *) ptr->payload); // Elad: add the received buffer to the Cyclic buffer for processing
 
     if (wr_err == ERR_OK)
     {
@@ -398,7 +400,7 @@ static void tcp_echoserver_send(struct tcp_pcb *tpcb, struct tcp_echoserver_stru
   * @param  es: pointer on echo_state structure
   * @retval None
   */
-static void tcp_echoserver_connection_close(struct tcp_pcb *tpcb, struct tcp_echoserver_struct *es)
+static void tcp_server_connection_close(struct tcp_pcb *tpcb, struct tcp_server_struct *es)
 {
 
   /* remove all callbacks */

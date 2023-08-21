@@ -13,6 +13,7 @@ void initCircularBuffer(CircularBuffer *cb) {
     cb->head = 0;
     cb->tail = 0;
     cb->count = 0;
+    sys_mutex_new(&cb->mutex);
 }
 
 int isCircularBufferFull(CircularBuffer *cb) {
@@ -23,30 +24,37 @@ int isCircularBufferEmpty(CircularBuffer *cb) {
     return (cb->count == 0);
 }
 
-int writeToBuff(CircularBuffer *cb, const char *buff, uint32_t size) {
-//    if (isCircularBufferFull(cb)) { // ############################### uncomment this if you want to not overwrite msg in the buffer
-//        return ERR_MEM; // Buffer is full, cannot write
-//    }
+int writeToBuff(CircularBuffer *cb, const INSPVA *buff) {
+    sys_mutex_lock(&cb->mutex);
 
-    for (uint32_t i = 0; i < size; i++) {
-        cb->data[cb->head] = buff[i];
-        cb->head = (cb->head + 1) % BUFFER_SIZE;
-        cb->count++;
-    }
-
-    return ERR_OK; // Success
-}
-
-int readFromBuff(CircularBuffer *cb, char *buff, uint32_t size) {
-    if (isCircularBufferEmpty(cb)) {
-        return ERR_BUF; // Buffer is empty, cannot read
-    }
-
-    for (uint32_t i = 0; i < size; i++) {
-        buff[i] = cb->data[cb->tail];
+    if (cb->count == BUFFER_SIZE) {
+        // Buffer is full, overwrite the oldest entry
         cb->tail = (cb->tail + 1) % BUFFER_SIZE;
         cb->count--;
     }
 
-    return ERR_OK; // Success
+    // Copy the data from the input buffer to the circular buffer
+    cb->data[cb->head] = *buff;
+    cb->head = (cb->head + 1) % BUFFER_SIZE;
+    cb->count++;
+
+    sys_mutex_unlock(&cb->mutex);
+    return ERR_OK;
+}
+
+int readFromBuff(CircularBuffer *cb, INSPVA *buff) {
+    sys_mutex_lock(&cb->mutex);
+
+    if (isCircularBufferEmpty(cb)) {
+        sys_mutex_unlock(&cb->mutex);
+        return ERR_BUF; // Buffer is empty, cannot read
+    }
+
+    // Copy the data from the circular buffer to the output buffer
+    *buff = cb->data[cb->tail];
+    cb->tail = (cb->tail + 1) % BUFFER_SIZE;
+    cb->count--;
+
+    sys_mutex_unlock(&cb->mutex);
+    return ERR_OK;
 }

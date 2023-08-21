@@ -27,8 +27,8 @@ void I2C_Init(){
 	/*##-1- Configure the I2C peripheral ######################################*/
 	I2cHandle.Instance             = I2Cx;
 	I2cHandle.Init.Timing          = I2C_TIMING;
-	I2cHandle.Init.OwnAddress1     = I2C_ADDRESS;
-	I2cHandle.Init.AddressingMode  = I2C_ADDRESSINGMODE_10BIT;
+	I2cHandle.Init.OwnAddress1     = I2C_ADDRESS_FINAL;
+	I2cHandle.Init.AddressingMode  = I2C_ADDRESSINGMODE_7BIT;
 	I2cHandle.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
 	I2cHandle.Init.OwnAddress2     = 0xFF;
 	I2cHandle.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
@@ -132,7 +132,7 @@ void HAL_I2C_MspDeInit(I2C_HandleTypeDef *hi2c)
   * @brief  This function handles I2C event interrupt request.
   * @param  None
   * @retval None
-  * @Note   This function is redefined in "main.h" and related to I2C data transmission
+  * @Note   This function is redefined in "I2C_config.h" and related to I2C data transmission
   */
 void I2Cx_EV_IRQHandler(void)
 {
@@ -143,7 +143,7 @@ void I2Cx_EV_IRQHandler(void)
   * @brief  This function handles I2C error interrupt request.
   * @param  None
   * @retval None
-  * @Note   This function is redefined in "main.h" and related to I2C error
+  * @Note   This function is redefined in "I2C_config.h" and related to I2C error
   */
 void I2Cx_ER_IRQHandler(void)
 {

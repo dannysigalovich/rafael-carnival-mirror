@@ -11,8 +11,10 @@
 
 #include "stm32h7xx_hal.h"
 #include "stm32h7xx_nucleo.h"
+#include "stm32h7xx_hal_i2c.h"
 #include "cmsis_os.h"
 #include "main.h"
+#include "ICD/ICD.h"
 
 
 /* User can use this section to tailor I2Cx/I2Cx instance used and associated
@@ -40,18 +42,20 @@
 #define I2Cx_ER_IRQHandler              I2C2_ER_IRQHandler
 
 /* Size of Transmission buffer */
-#define TXBUFFERSIZE                      1024
+#define TXBUFFERSIZE                    1024
 /* Size of Reception buffer */
-#define RXBUFFERSIZE                      TXBUFFERSIZE
+#define RXBUFFERSIZE					TXBUFFERSIZE
 
-#define I2C_ADDRESS        0x30F
+
+#define I2C_ADDRESS        				0x8
+#define I2C_ADDRESS_FINAL        		(I2C_ADDRESS << 1)
 
 /* I2C TIMING Register define when I2C clock source is APB1 (SYSCLK/4) */
 /* I2C TIMING is calculated in case of the I2C Clock source is the APB1CLK = 100 MHz */
 /* This example use TIMING to 0x00901954 to reach 400 kHz speed (Rise time = 100 ns, Fall time = 10 ns) */
-#define I2C_TIMING      0x00901954
+#define I2C_TIMING      				0x00901954
 
-#define I2C_HANDLE_THREAD_PRIO    ( osPriorityHigh )
+#define I2C_HANDLE_THREAD_PRIO    		( osPriorityNormal )
 
 
 void I2C_Init();

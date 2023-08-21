@@ -88,6 +88,8 @@ int main(void)
   osThreadDef(Start, StartThread, osPriorityNormal, 0, configMINIMAL_STACK_SIZE * 4);
   osThreadCreate (osThread(Start), NULL);
 
+  printf("sdsssss\r\n");
+
   /* Start scheduler */
   osKernelStart();
   
@@ -108,7 +110,7 @@ static void StartThread(void const * argument)
   /* Initialize the LwIP stack */
   Netif_Config();
 
-  init_CPT7_broker();
+//  init_CPT7_broker();
 
   I2C_start_listen();
 
@@ -127,6 +129,7 @@ static void StartThread(void const * argument)
   */
 static void BSP_Config(void)
 {
+  BSP_LED_Init(LED1);
   BSP_LED_Init(LED2);
   BSP_LED_Init(LED3);
 }
