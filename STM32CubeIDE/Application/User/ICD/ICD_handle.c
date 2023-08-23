@@ -12,6 +12,7 @@
 #include <string.h>
 #include "Novatel/navMesseging.h"
 #include "CyclicBuffer/cyBuff.h"
+#include "IO_handle/IO_handle.h"
 
 
 /* I2C handler declaration */
@@ -29,52 +30,48 @@ FireFlyStatus currStatus;
 
 uint8_t msgId = 0; // get increment every time we send something
 
-extern CircularBuffer CPTcircularBuff; // the buffer CPT7 is filling (only two slots at the moment)
+extern CircularBuffer INSPVABuff;
+extern CircularBuffer INSSTDBuff;
 
 enum FlowState flow = Recv;
 
 
-uint8_t indication = 0;
-
-
-void HAL_I2C_SlaveRxCpltCallback(I2C_HandleTypeDef *hi2c){}
-void HAL_I2C_SlaveTxCpltCallback(I2C_HandleTypeDef *hi2c){}
-
-void next(){
-	if (flow == ToTransmit) {
-		flow = Transmit;
-		return;
-	}
-	if (flow == ToRecv){
-		flow = Recv;
-		return;
-	}
-	flow += 1;
-	flow = flow % 3;
-}
+void HAL_I2C_SlaveRxCpltCallback(I2C_HandleTypeDef *hi2c){flow = Process;}
+void HAL_I2C_SlaveTxCpltCallback(I2C_HandleTypeDef *hi2c){flow = Recv;}
 
 
 void convertINSPVAToNavFrameINS(INSPVA *inspva, NavFrameINS *navFrame) {
-
-    navFrame->INS_TimeTagSec = inspva->week * 604800.0 + inspva->seconds; // Week to seconds conversion
+    navFrame->weeknumber = inspva->week;
+    navFrame->mSec = inspva->seconds;
     navFrame->PositionLatitudeGeoRad = inspva->latitude;
     navFrame->PositionLongitudeGeoRad = inspva->longitude;
     navFrame->PositionAltitudeMeterAEL = inspva->height;
     navFrame->VelocityNorthMeterPerSec = inspva->northVelocity;
     navFrame->VelocityEastMeterPerSec = inspva->eastVelocity;
-    navFrame->VelocityDownMeterPerSec = inspva->upVelocity;
+    navFrame->VelocityDownMeterPerSec = -inspva->upVelocity;
     navFrame->AzimuthDeg = inspva->azimuth;
     navFrame->PitchDeg = inspva->pitch;
     navFrame->RollDeg = inspva->roll;
     navFrame->Status = inspva->status;
     navFrame->cs = 1;
+}
 
+void convertINSSTDToNavFrameINSSTD(INSSTDEV *insstd, NavFrameINSSTD *navFrame){
+	navFrame->StdLatitudeMeter = insstd->latitude_sigma;
+	navFrame->StdLongitudeMeter = insstd->longitude_sigma;
+	navFrame->StdAltitudeMeter = insstd->height_sigma;
+	navFrame->StdVelocityNorth = insstd->north_velocity_sigma;
+	navFrame->StdVelocityEast = insstd->east_velocity_sigma;
+	navFrame->StdVelocityDown = insstd->up_velocity_sigma;
+	navFrame->StdTrueHeadingDeg = insstd->azimuth_sigma;
+	navFrame->StdPitchDeg = insstd->pitch_sigma;
+	navFrame->StdRollDeg = insstd->roll_sigma;
+	navFrame->cs = 1;
 }
 
 void buildINSFrame(NavFrameINS *frame){
-
 	INSPVA inspva;
-	readFromBuff(&CPTcircularBuff, &inspva);
+	readINSPVA(&INSPVABuff, &inspva);
 
 	frame->msgType = NavInsEnum;
 	frame->msgId = msgId++;
@@ -82,26 +79,42 @@ void buildINSFrame(NavFrameINS *frame){
 	convertINSPVAToNavFrameINS(&inspva, frame); // check how the real convert works
 }
 
+void buildINSSTDFrame(NavFrameINSSTD *frame){
+	INSSTDEV insstd;
+	readINSSTD(&INSSTDBuff, &insstd);
+
+	frame->msgType = InsStdEnum;
+	frame->msgId = msgId++;
+
+	convertINSSTDToNavFrameINSSTD(&insstd, frame);
+}
+
 void buildLaunchCmd(LaunchCmd *cmd){
 
 	cmd->msgType = LaunchCmdEnum;
 	cmd->msgId = msgId++;
-	cmd->missionId = 2;
-	// TODO: check logic and fill the rest
 
+	if (currStatus.isReadyToLaunch && isLaunchSwitchOn()){
+		// build real launch command
+		cmd->missionId = 1;
+	}
+	else{
+	 // build fake launch command (fill with zero or something similar)
+		cmd->missionId = 0;
+	}
+	cmd->cs = 0;
 }
 
 
 void handle_request(RequestMessage *req){
 
-
 	switch (req->requestedType){
 
 	case NavInsEnum:
-		NavFrameINS frame;
-		buildINSFrame(&frame);
-		memcpy(aTxBuffer, &frame, sizeof(frame));
-		currTransmitSize = sizeof(frame);
+		NavFrameINS PVAFrame;
+		buildINSFrame(&PVAFrame);
+		memcpy(aTxBuffer, &PVAFrame, sizeof(PVAFrame));
+		currTransmitSize = sizeof(PVAFrame);
 		break;
 	case LaunchCmdEnum:
 		LaunchCmd cmd = {0};
@@ -109,7 +122,13 @@ void handle_request(RequestMessage *req){
 		memcpy(aTxBuffer, &cmd, sizeof(cmd));
 		currTransmitSize = sizeof(cmd);
 		break;
-	default:
+	case InsStdEnum:
+		NavFrameINSSTD STDFrame;
+		buildINSSTDFrame(&STDFrame);
+		memcpy(aTxBuffer, &STDFrame, sizeof(STDFrame));
+		currTransmitSize = sizeof(STDFrame);
+		break;
+	default: // i saw this in the arduino and guess it can help in an unknown msg
 			char data[100] = {0};
 			data[0] = 2;
 			data[1] = 12; // msnId(H)
@@ -118,7 +137,10 @@ void handle_request(RequestMessage *req){
 			data[4] = 1;
 			data[5] = 255; // CS
 			memcpy(aTxBuffer, data, 100);
+			currTransmitSize = 100;
+			break;
 	}
+	currTransmitSize = req->msgSize;
 }
 
 
@@ -129,12 +151,12 @@ void ICD_process(){
 
 	case RequestEnum:
 		handle_request((RequestMessage *)aRxBuffer);
-		flow = ToTransmit;
+		flow = Transmit;
 		break;
 
 	case FirFlyStatus:
 		memcpy(&currStatus, aRxBuffer, sizeof(FireFlyStatus));
-		flow = ToRecv;
+		flow = Recv;
 		break;
 
 	default:
@@ -145,13 +167,15 @@ void ICD_process(){
 
 void ICD_handle(void *args){
 
+	currStatus.BITStatus = 1; // in order to not launch immediately
+
 	while(1){
 
 		switch (flow){
 
 		case Recv:
 			/*Put I2C peripheral in reception process ###########################*/
-			if(HAL_I2C_Slave_Receive_IT(&I2cHandle, (uint8_t *)aRxBuffer, RXBUFFERSIZE) != HAL_OK){
+			if(HAL_I2C_Slave_Receive_IT(&I2cHandle, (uint8_t *)aRxBuffer, RXBUFFERSIZE) != HAL_OK){ // size set to RXBUFFERSIZE and will change later by the driver
 				/* Transfer error in reception process */
 				Error_Handler();
 			}
@@ -165,7 +189,7 @@ void ICD_handle(void *args){
 			/*Start the transmission process #####################################*/
 			/* While the I2C in reception process, user can transmit data through
 			 "aTxBuffer" buffer */
-			if(HAL_I2C_Slave_Transmit_IT(&I2cHandle, (uint8_t*)aTxBuffer, currTransmitSize)!= HAL_OK)	{
+			if(HAL_I2C_Slave_Transmit_IT(&I2cHandle, (uint8_t*)aTxBuffer, currTransmitSize) != HAL_OK)	{
 				/* Transfer error in transmission process */
 				Error_Handler();
 			}
@@ -183,10 +207,6 @@ void ICD_handle(void *args){
 		  transfer, but application may perform other tasks while transfer operation
 		  is ongoing. */
 		while (HAL_I2C_GetState(&I2cHandle) != HAL_I2C_STATE_READY){
-			sys_msleep(50);
 		}
-
-	    next();
-
 	}
 }

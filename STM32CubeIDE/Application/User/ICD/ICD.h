@@ -15,21 +15,24 @@ void ICD_handle(void *args);
 void HAL_I2C_SlaveRxCpltCallback(I2C_HandleTypeDef *hi2c);
 void HAL_I2C_SlaveTxCpltCallback(I2C_HandleTypeDef *hi2c);
 
-
 enum FlowState{
 	Recv = 0,
 	Process,
 	Transmit,
-	ToTransmit,
-	ToRecv
 };
-
 
 enum MessageTypeEnum{
 	RequestEnum = 0,
 	NavInsEnum = 1,
+	MissionHeaderEnum = 2,
+	WPDataEnum = 3,
 	LaunchCmdEnum = 4,
-	FirFlyStatus = 8
+	TargetLocationEnum = 5,
+	AttackPolygonEnum = 6,
+	GraveyardEnum = 7,
+	FirFlyStatus= 8,
+	InsStdEnum = 9,
+	SecretCmdEnum = 10
 };
 
 typedef struct RequestMessage{
@@ -43,7 +46,8 @@ typedef struct RequestMessage{
 typedef struct NavFrameINS{
     unsigned char msgType; // according to MessageTypeEnum
     unsigned char msgId;   // Incremental
-    double INS_TimeTagSec; // GPS time from GNSS Week + Seconds from week start ( Seconds from Jan 6 1980 no leap), should be UTC ? else ?
+    unsigned short weeknumber;
+    unsigned int mSec;
     double PositionLatitudeGeoRad;
     double PositionLongitudeGeoRad;
     float PositionAltitudeMeterAEL; // should be ASL ?
@@ -58,6 +62,21 @@ typedef struct NavFrameINS{
 
 } NavFrameINS;
 
+typedef struct NavFrameINSSTD {
+	unsigned char msgType;
+	unsigned char msgId;
+	float StdLatitudeMeter;
+	float StdLongitudeMeter;
+	float StdAltitudeMeter;
+	float StdVelocityNorth;
+	float StdVelocityEast;
+	float StdVelocityDown;
+	float StdTrueHeadingDeg;
+	float StdPitchDeg;
+	float StdRollDeg;
+	unsigned char cs;
+}NavFrameINSSTD ;
+
 enum AltitudeTypeEnum {
 	RelativeEnum = 0,
 	PercentageEnum,
@@ -70,8 +89,6 @@ typedef struct LaunchCmd{
     unsigned char msgType; // according to MessageTypeEnum
     unsigned char msgId;   // Incremental
     unsigned short missionId;
-    unsigned char Word1;
-    unsigned char Word2;
     unsigned char cs;
 } LaunchCmd;
 
@@ -85,6 +102,13 @@ typedef struct FireFlyStatus{
     unsigned char cs;
 } FireFlyStatus;
 
+
+typedef struct SecretCmd {
+	unsigned char msgType; // according to MessageTypeEnum
+	unsigned char secret1[16];
+	unsigned char secret2[16];
+	unsigned char cs;
+} SecretCmd;
 
 
 #endif /* APPLICATION_USER_ICD_ICD_H_ */

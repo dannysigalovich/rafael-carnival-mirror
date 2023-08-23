@@ -8,11 +8,13 @@
 
 #include "cyBuff.h"
 #include "lwip/err.h"
+#include <string.h>
 
-void initCircularBuffer(CircularBuffer *cb) {
+void initCircularBuffer(CircularBuffer *cb, INSType type) {
     cb->head = 0;
     cb->tail = 0;
     cb->count = 0;
+    cb->type = type;
     sys_mutex_new(&cb->mutex);
 }
 
@@ -24,8 +26,10 @@ int isCircularBufferEmpty(CircularBuffer *cb) {
     return (cb->count == 0);
 }
 
-int writeToBuff(CircularBuffer *cb, const INSPVA *buff) {
+int writeToBuff(CircularBuffer *cb, const void *buff, uint8_t size) {
     sys_mutex_lock(&cb->mutex);
+
+    void *cbData = cb->type == INSPVAType ? cb->data.PVAData : cb->data.STDData;
 
     if (cb->count == BUFFER_SIZE) {
         // Buffer is full, overwrite the oldest entry
@@ -34,7 +38,7 @@ int writeToBuff(CircularBuffer *cb, const INSPVA *buff) {
     }
 
     // Copy the data from the input buffer to the circular buffer
-    cb->data[cb->head] = *buff;
+    memcpy(&cbData[cb->head], buff, size);
     cb->head = (cb->head + 1) % BUFFER_SIZE;
     cb->count++;
 
@@ -42,8 +46,10 @@ int writeToBuff(CircularBuffer *cb, const INSPVA *buff) {
     return ERR_OK;
 }
 
-int readFromBuff(CircularBuffer *cb, INSPVA *buff) {
+int readFromBuff(CircularBuffer *cb, void *buff, uint8_t size) {
     sys_mutex_lock(&cb->mutex);
+
+    void *cbData = cb->type == INSPVAType ? cb->data.PVAData : cb->data.STDData;
 
     if (isCircularBufferEmpty(cb)) {
         sys_mutex_unlock(&cb->mutex);
@@ -51,10 +57,20 @@ int readFromBuff(CircularBuffer *cb, INSPVA *buff) {
     }
 
     // Copy the data from the circular buffer to the output buffer
-    *buff = cb->data[cb->tail];
+    memcpy(buff, &cbData[cb->head], size);
     cb->tail = (cb->tail + 1) % BUFFER_SIZE;
     cb->count--;
 
     sys_mutex_unlock(&cb->mutex);
     return ERR_OK;
+}
+
+
+int readINSPVA(CircularBuffer *cb, INSPVA *ins){
+	return readFromBuff(cb, ins, sizeof(INSPVA));
+}
+
+
+int readINSSTD(CircularBuffer *cb, INSSTDEV *ins){
+	return readFromBuff(cb, ins, sizeof(INSSTDEV));
 }

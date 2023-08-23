@@ -126,8 +126,6 @@ void HAL_I2C_MspDeInit(I2C_HandleTypeDef *hi2c)
 }
 
 
-
-
 /**
   * @brief  This function handles I2C event interrupt request.
   * @param  None
@@ -149,3 +147,6 @@ void I2Cx_ER_IRQHandler(void)
 {
   HAL_I2C_ER_IRQHandler(&I2cHandle);
 }
+
+
+

@@ -1785,7 +1785,7 @@ HAL_StatusTypeDef HAL_I2C_Slave_Transmit_IT(I2C_HandleTypeDef *hi2c, uint8_t *pD
     hi2c->pBuffPtr    = pData;
     hi2c->XferCount   = Size;
     hi2c->XferSize    = hi2c->XferCount;
-    hi2c->XferOptions = I2C_NO_OPTION_FRAME;
+    hi2c->XferOptions = I2C_NO_OPTION_FRAME; // Elad comment this to enable callback
     hi2c->XferISR     = I2C_Slave_ISR_IT;
 
     /* Preload TX data if no stretch enable */
@@ -1849,7 +1849,7 @@ HAL_StatusTypeDef HAL_I2C_Slave_Receive_IT(I2C_HandleTypeDef *hi2c, uint8_t *pDa
     hi2c->pBuffPtr    = pData;
     hi2c->XferCount   = Size;
     hi2c->XferSize    = hi2c->XferCount;
-    hi2c->XferOptions = I2C_NO_OPTION_FRAME;
+    hi2c->XferOptions = I2C_NO_OPTION_FRAME; // Elad comment this to enable callback
     hi2c->XferISR     = I2C_Slave_ISR_IT;
 
     /* Process Unlocked */
@@ -5077,6 +5077,7 @@ static HAL_StatusTypeDef I2C_Mem_ISR_IT(struct __I2C_HandleTypeDef *hi2c, uint32
   * @param  ITFlags Interrupt flags to handle.
   * @param  ITSources Interrupt sources enabled.
   * @retval HAL status
+  *  #########################    Elad edit this function to take the size dynamicly by the msgId type ############################################
   */
 static HAL_StatusTypeDef I2C_Slave_ISR_IT(struct __I2C_HandleTypeDef *hi2c, uint32_t ITFlags,
                                           uint32_t ITSources)
@@ -5092,6 +5093,9 @@ static HAL_StatusTypeDef I2C_Slave_ISR_IT(struct __I2C_HandleTypeDef *hi2c, uint
       (I2C_CHECK_IT_SOURCE(ITSources, I2C_IT_STOPI) != RESET))
   {
     /* Call I2C Slave complete process */
+	if (hi2c->State == HAL_I2C_STATE_BUSY_RX){
+		hi2c->XferCount = 0;
+	}
     I2C_ITSlaveCplt(hi2c, tmpITFlags);
   }
 
@@ -6324,6 +6328,7 @@ static void I2C_ITListenCplt(I2C_HandleTypeDef *hi2c, uint32_t ITFlags)
   */
 static void I2C_ITError(I2C_HandleTypeDef *hi2c, uint32_t ErrorCode)
 {
+
   HAL_I2C_StateTypeDef tmpstate = hi2c->State;
   uint32_t tmppreviousstate;
 

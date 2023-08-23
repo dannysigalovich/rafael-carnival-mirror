@@ -15,7 +15,7 @@
 #include "CyclicBuffer/cyBuff.h"
 #include "stdio.h"
 
-extern CircularBuffer CPTcircularBuff;
+extern CircularBuffer INSPVABuff;
 
 
 void printINSPVAFields(const INSPVA *inspva) {
@@ -41,8 +41,8 @@ void CPT_debug_thread(void *arg){
 	INSPVA ins;
 
 	while (1){
-		if (!isCircularBufferEmpty(&CPTcircularBuff)){
-			readFromBuff(&CPTcircularBuff, &ins);
+		if (!isCircularBufferEmpty(&INSPVABuff)){
+			readINSPVA(&INSPVABuff, &ins);
 			printINSPVAFields(&ins);
 		}
 		else{

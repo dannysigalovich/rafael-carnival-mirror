@@ -16,6 +16,12 @@
 void init_CPT7_broker();
 
 
+typedef enum INSType{
+	INSPVAType = 507,
+	INSSTDType = 2051
+} INSType;
+
+
 typedef enum{
 	INS_INACTIVE = 0,
 	INS_ALIGNING,
@@ -63,10 +69,10 @@ typedef struct {
 	unsigned short reserved;
 	unsigned short recevierSWVersion;
 
-}INSPVA_header;
+} INS_header;
 
 typedef struct {
-	INSPVA_header header;
+	INS_header header;
 	unsigned long week;
 	double seconds;
 	double latitude;
@@ -80,7 +86,30 @@ typedef struct {
 	double azimuth;
 	INS_Status status;
 	unsigned int crc;
-}INSPVA;
+} INSPVA;
+
+
+typedef struct INSSTDEV{
+	INS_header header;
+	float latitude_sigma;             // Latitude standard deviation (m)
+	float longitude_sigma;            // Longitude standard deviation (m)
+	float height_sigma;               // Height standard deviation (m)
+	float north_velocity_sigma;       // North velocity standard deviation (m/s)
+	float east_velocity_sigma;        // East velocity standard deviation (m/s)
+	float up_velocity_sigma;          // Up velocity standard deviation (m/s)
+	float roll_sigma;                 // Roll standard deviation (degrees)
+	float pitch_sigma;                // Pitch standard deviation (degrees)
+	float azimuth_sigma;              // Azimuth standard deviation (degrees)
+	unsigned long ext_sol_status;     // Extended solution status (Ulong)
+	unsigned short time_since_update; // Elapsed time since last update (seconds, Ushort)
+	unsigned short reserved_1;        // Reserved (Ushort)
+	unsigned long reserved_2;         // Reserved (Ulong)
+	unsigned long reserved_3;         // Reserved (Ulong)
+	unsigned int crc;                 // 32-bit CRC (Hex)
+} INSSTDEV;
+
+
+
 
 
 void printINSPVAFields(const INSPVA *inspva);

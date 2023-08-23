@@ -28,8 +28,9 @@
 #include "app_ethernet.h"
 #include "Novatel/navMesseging.h"
 #include "I2C/i2c_config.h"
+#include "IO_handle/IO_handle.h"
 
-#define TREGO_DEBUG
+//#define TREGO_DEBUG
 
 #ifdef TREGO_DEBUG
 #include "uart/uart_config.h"
@@ -84,11 +85,11 @@ int main(void)
 
   I2C_Init();
 
+  GPIO_Config();
+
   /* Init thread */
   osThreadDef(Start, StartThread, osPriorityNormal, 0, configMINIMAL_STACK_SIZE * 4);
   osThreadCreate (osThread(Start), NULL);
-
-  printf("sdsssss\r\n");
 
   /* Start scheduler */
   osKernelStart();
@@ -110,7 +111,7 @@ static void StartThread(void const * argument)
   /* Initialize the LwIP stack */
   Netif_Config();
 
-//  init_CPT7_broker();
+  init_CPT7_broker();
 
   I2C_start_listen();
 
@@ -342,6 +343,7 @@ void Error_Handler(void)
   /* USER CODE BEGIN Error_Handler_Debug */
   /* User can add his own implementation to report the HAL error return state */
   __disable_irq();
+  BSP_LED_On(LED3);
   while (1)
   {
   }

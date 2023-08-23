@@ -16,7 +16,8 @@
 #if LWIP_TCP
 
 static struct tcp_pcb *tcp_server_pcb;
-CircularBuffer CPTcircularBuff;
+CircularBuffer INSPVABuff;
+CircularBuffer INSSTDBuff;
 
 /* ECHO protocol states */
 enum tcp_server_states
@@ -56,7 +57,8 @@ void tcp_server_init(void* arg)
 {
   /* create new tcp pcb */
   tcp_server_pcb = tcp_new();
-  initCircularBuffer(&CPTcircularBuff);
+  initCircularBuffer(&INSPVABuff, INSPVAType);
+  initCircularBuffer(&INSSTDBuff, INSSTDType);
 
   if (tcp_server_pcb != NULL)
   {
@@ -354,7 +356,17 @@ static void tcp_server_send(struct tcp_pcb *tpcb, struct tcp_server_struct *es)
     /* enqueue data for transmission */
 //    wr_err = tcp_write(tpcb, ptr->payload, ptr->len, 1); // Elad: comment this because we are not sending anything to the client
 
-    wr_err = writeToBuff(&CPTcircularBuff, (INSPVA *) ptr->payload); // Elad: add the received buffer to the Cyclic buffer for processing
+    INS_header *header = ptr->payload;
+    switch (header->msgID){
+    case INSPVAType:
+    	wr_err = writeToBuff(&INSPVABuff, (INSPVA *) ptr->payload, sizeof(INSPVA));
+    	break;
+    case INSSTDType:
+    	wr_err = writeToBuff(&INSSTDBuff, (INSSTDEV *) ptr->payload, sizeof(INSSTDEV));
+    	break;
+    default:
+    	wr_err = ERR_OK;
+    }
 
     if (wr_err == ERR_OK)
     {
