@@ -5,6 +5,7 @@
  *      Author: eladsez
  */
 
+#include <INSBuffer/cyBuff.h>
 #include <tcp_util/tcp_server.h>
 #include "Novatel/navMesseging.h"
 #include "lwip/opt.h"
@@ -12,7 +13,6 @@
 #include "lwip/api.h"
 #include "lwip/apps/fs.h"
 #include "cmsis_os.h"
-#include "CyclicBuffer/cyBuff.h"
 #include "stdio.h"
 
 extern CircularBuffer INSPVABuff;
