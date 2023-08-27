@@ -36,6 +36,7 @@
 #define IP_ADDR1   ((uint8_t)168U)
 #define IP_ADDR2   ((uint8_t)1U)
 #define IP_ADDR3   ((uint8_t)10U)
+#define UDP_PORT	7
 
 /*NETMASK*/
 #define NETMASK_ADDR0   ((uint8_t)255U)

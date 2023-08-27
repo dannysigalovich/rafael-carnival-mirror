@@ -8,13 +8,11 @@
 #ifndef NAVMESSEGING_H_
 #define NAVMESSEGING_H_
 
-#define TCPSERVER_THREAD_PRIO    ( osPriorityAboveNormal )
-#define CPT7_BROKER_THREAD_PRIO    ( osPriorityAboveNormal )
-
 #include <stdint.h>
 
-void init_CPT7_broker();
+#define CPT7_BROKER_THREAD_PRIO    ( osPriorityAboveNormal )
 
+void init_novatel_debug();
 
 typedef enum INSType{
 	INSPVAType = 507,
@@ -107,11 +105,5 @@ typedef struct INSSTDEV{
 	unsigned long reserved_3;         // Reserved (Ulong)
 	unsigned int crc;                 // 32-bit CRC (Hex)
 } INSSTDEV;
-
-
-
-
-
-void printINSPVAFields(const INSPVA *inspva);
 
 #endif /* NAVMESSEGING_H_ */

@@ -6,16 +6,17 @@
  */
 
 #include <INSBuffer/cyBuff.h>
-#include <tcp_util/tcp_server.h>
 #include "Novatel/navMesseging.h"
 #include "lwip/opt.h"
 #include "lwip/arch.h"
 #include "lwip/api.h"
 #include "lwip/apps/fs.h"
 #include "cmsis_os.h"
-#include "stdio.h"
+#include <stdio.h>
+
 
 extern CircularBuffer INSPVABuff;
+extern CircularBuffer INSSTDBuff;
 
 
 void printINSPVAFields(const INSPVA *inspva) {
@@ -56,8 +57,10 @@ void CPT_debug_thread(void *arg){
   * @param  none
   * @retval None
   */
-void init_CPT7_broker()
+void init_novatel_debug()
 {
-	sys_thread_new("CPT7_tcp_server", tcp_server_init, NULL, DEFAULT_THREAD_STACKSIZE, TCPSERVER_THREAD_PRIO);
-//	sys_thread_new("CPT7_debug_thread", CPT_debug_thread, NULL, DEFAULT_THREAD_STACKSIZE, CPT7_BROKER_THREAD_PRIO);
+	sys_thread_new("CPT7_debug_thread", CPT_debug_thread, NULL, DEFAULT_THREAD_STACKSIZE, CPT7_BROKER_THREAD_PRIO);
 }
+
+
+
