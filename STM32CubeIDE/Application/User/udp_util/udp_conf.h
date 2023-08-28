@@ -8,7 +8,7 @@
 #ifndef APPLICATION_USER_UDP_UTIL_UDP_CONF_H_
 #define APPLICATION_USER_UDP_UTIL_UDP_CONF_H_
 
-#define UDP_THREAD_PRIO    ( osPriorityAboveNormal )
+#define UDP_THREAD_PRIO    ( osPriorityNormal )
 
 void init_udp_broker();
 

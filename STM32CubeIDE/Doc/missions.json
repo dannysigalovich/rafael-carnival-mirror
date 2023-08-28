@@ -1,5 +1,3 @@
-before sending the json user must send packets with "###missions_secrets###" to the stm 
-
 {
   "missions": [
     {

@@ -16,13 +16,21 @@
 #include "Novatel/navMesseging.h"
 #include "INSBuffer/cyBuff.h"
 #include "udp_conf.h"
+#include "lwjson/json_parser/json_parser.h"
+#include "ICD/ICD.h"
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
+
+#define MIN_PAYLOAD_SIZE 20 // the minimum payload size if it smaller then this we ignore (we can't check if its ours)
+
 /* Private variables ---------------------------------------------------------*/
 CircularBuffer INSPVABuff;
 CircularBuffer INSSTDBuff;
+
+Mission missions[4];
+char secret_words[2][MAX_SECRET_SIZE];
 
 /* Private function prototypes -----------------------------------------------*/
 void udp_receive_callback(void *arg, struct udp_pcb *upcb, struct pbuf *p, const ip_addr_t *addr, u16_t port);
@@ -34,9 +42,11 @@ void udp_shaft_thread(void* arg);
   * @retval None
   */
 void init_udp_broker(){
-
 	initCircularBuffer(&INSPVABuff, INSPVAType);
 	initCircularBuffer(&INSSTDBuff, INSSTDType);
+
+	memset(secret_words[0], 0, 64);
+	memset(secret_words[1], 0, 64);
 
 	sys_thread_new("udp_connection", udp_shaft_thread, NULL, DEFAULT_THREAD_STACKSIZE, UDP_THREAD_PRIO);
 }
@@ -74,42 +84,51 @@ void udp_shaft_thread(void* arg)
    }
 
    while(1){
- 	  sys_msleep(1000); /* for the cpu to not poll */
+	   sys_msleep(5); /* for the cpu to not poll */
    }
 }
 
-uint8_t sync_check(struct pbuf *pbuf){
+
+uint8_t INS_sync_check(struct pbuf *pbuf){
 
     INS_header *header = pbuf->payload;
 	uint8_t *sync = header->sync;
 
-	uint8_t ret = sync[0] == 0xAA && sync[1] == 0x44 && sync[2] == 0x12; // check the sync symbols of the header
+	uint8_t ret = (pbuf->len == sizeof(INSPVA) || pbuf->len == sizeof(INSSTDEV)); // check that we got a hole packet
 
-	ret = ret && (pbuf->len == sizeof(INSPVA) || pbuf->len == sizeof(INSSTDEV)); // check that we got a hole packet
-
-	return ret;
+	return ret && sync[0] == 0xAA && sync[1] == 0x44 && sync[2] == 0x12;
 }
+
+uint8_t missions_sync_check(struct pbuf *pbuf){
+	uint8_t *sync = pbuf->payload;
+	return sync[0] == 0xAA && sync[1] == 0xBB && sync[2] == 0xCC && sync[3] == 0xDD && sync[4] == 0xEE;
+}
+
 
 void parse_packet(struct pbuf *pbuf){
 
-	// TODO: add logic to check if it is a missions_secret packet
-    INS_header *header = pbuf->payload;
+	if (pbuf->len < MIN_PAYLOAD_SIZE){
+		return;
+	}
 
-    if (!sync_check(pbuf)){// check if the pkt is meant for us as part of INS log
+    if (missions_sync_check(pbuf)){// check if the pkt is meant for us as part of INS log and if not it might be missions pkt
+    	parse_missions(pbuf->payload + MISSIONS_HEADER_SIZE, missions, secret_words);
     	return;
     }
 
-    switch (header->msgID){
-    case INSPVAType:
-    	writeToBuff(&INSPVABuff, (INSPVA *) pbuf->payload, sizeof(INSPVA));
-    	break;
-    case INSSTDType:
-    	writeToBuff(&INSSTDBuff, (INSSTDEV *) pbuf->payload, sizeof(INSSTDEV));
-    	break;
-    default:
-    	break;
+    else if(INS_sync_check(pbuf)){
+    	INS_header *header = pbuf->payload;
+		switch (header->msgID){
+		case INSPVAType:
+			writeToBuff(&INSPVABuff, (INSPVA *) pbuf->payload, sizeof(INSPVA));
+			break;
+		case INSSTDType:
+			writeToBuff(&INSSTDBuff, (INSSTDEV *) pbuf->payload, sizeof(INSSTDEV));
+			break;
+		default:
+			break;
+		}
     }
-
 }
 
 /**

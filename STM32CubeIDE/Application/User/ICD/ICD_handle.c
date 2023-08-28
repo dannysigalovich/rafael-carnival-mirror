@@ -28,6 +28,10 @@ extern uint8_t aRxBuffer[RXBUFFERSIZE];
 /* the current status of mauz updated every 100ms */
 FireFlyStatus currStatus;
 
+/* missions and secret words got from  */
+extern Mission missions[4];
+extern char secret_words[2][64];
+
 uint8_t msgId = 0; // get increment every time we send something
 
 extern CircularBuffer INSPVABuff;
@@ -105,6 +109,13 @@ void buildLaunchCmd(LaunchCmd *cmd){
 	cmd->cs = 0;
 }
 
+void buildSecretCmd(SecretCmd *secret){
+	secret->msgType = SecretCmdEnum;
+	memcpy(secret->secret1, secret_words[0], 16);
+	memcpy(secret->secret2, secret_words[1], 16);
+	secret->cs = 1;
+}
+
 
 void handle_request(RequestMessage *req){
 
@@ -128,17 +139,24 @@ void handle_request(RequestMessage *req){
 		memcpy(aTxBuffer, &STDFrame, sizeof(STDFrame));
 		currTransmitSize = sizeof(STDFrame);
 		break;
+
+	case SecretCmdEnum:
+		SecretCmd secret;
+		buildSecretCmd(&secret);
+		memcpy(aTxBuffer, &secret, sizeof(secret));
+		currTransmitSize = sizeof(secret);
+		break;
 	default: // i saw this in the arduino and guess it can help in an unknown msg
-			char data[100] = {0};
-			data[0] = 2;
-			data[1] = 12; // msnId(H)
-			data[2] = 34; // msnId(L)
-			data[3] = 4;
-			data[4] = 1;
-			data[5] = 255; // CS
-			memcpy(aTxBuffer, data, 100);
-			currTransmitSize = 100;
-			break;
+		char data[100] = {0};
+		data[0] = 2;
+		data[1] = 12; // msnId(H)
+		data[2] = 34; // msnId(L)
+		data[3] = 4;
+		data[4] = 1;
+		data[5] = 255; // CS
+		memcpy(aTxBuffer, data, 100);
+		currTransmitSize = 100;
+		break;
 	}
 	currTransmitSize = req->msgSize;
 }
@@ -207,6 +225,7 @@ void ICD_handle(void *args){
 		  transfer, but application may perform other tasks while transfer operation
 		  is ongoing. */
 		while (HAL_I2C_GetState(&I2cHandle) != HAL_I2C_STATE_READY){
+			sys_msleep(1); /* for the cpu to not poll */
 		}
 	}
 }
