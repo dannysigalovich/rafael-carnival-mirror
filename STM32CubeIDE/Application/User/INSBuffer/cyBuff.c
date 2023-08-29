@@ -10,8 +10,7 @@
 #include "lwip/err.h"
 #include <string.h>
 
-void initCircularBuffer(CircularBuffer *cb, INSType type) {
-    cb->type = type;
+void initCircularBuffer(CircularBuffer *cb) {
     sys_mutex_new(&cb->mutex);
 }
 
@@ -19,33 +18,25 @@ void initCircularBuffer(CircularBuffer *cb, INSType type) {
 int writeToBuff(CircularBuffer *cb, const void *buff, uint8_t size) {
     sys_mutex_lock(&cb->mutex);
 
-    void *cbData = cb->type == INSPVAType ? (void *) &(cb->data.PVAData) : (void *) &(cb->data.STDData);
-
     // Copy the data from the input buffer to the buffer
-    memcpy(cbData, buff, size);
+    memcpy(&(cb->data), buff, size);
 
-    sys_mutex_unlock(&cb->mutex);
+    sys_mutex_unlock(&(cb->mutex));
     return ERR_OK;
 }
 
 int readFromBuff(CircularBuffer *cb, void *buff, uint8_t size) {
     sys_mutex_lock(&cb->mutex);
 
-    void *cbData = cb->type == INSPVAType ? (void *) &(cb->data.PVAData) : (void *) &(cb->data.STDData);
-
     // Copy the data from the  buffer to the output buffer
-    memcpy(buff, cbData, size);
+    memcpy(buff, &(cb->data), size);
 
-    sys_mutex_unlock(&cb->mutex);
+    sys_mutex_unlock(&(cb->mutex));
     return ERR_OK;
 }
 
-
-int readINSPVA(CircularBuffer *cb, INSPVA *ins){
-	return readFromBuff(cb, ins, sizeof(INSPVA));
+int readINSPVAX(CircularBuffer *cb, INSPVAX *inspvax){
+	return readFromBuff(cb, inspvax, sizeof(INSPVAX));
 }
 
 
-int readINSSTD(CircularBuffer *cb, INSSTDEV *ins){
-	return readFromBuff(cb, ins, sizeof(INSSTDEV));
-}
