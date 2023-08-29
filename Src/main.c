@@ -24,11 +24,12 @@
 #include "cmsis_os.h"
 #include "ethernetif.h"
 #include "lwip/netif.h"
-#include "lwip/tcpip.h"
 #include "app_ethernet.h"
 #include "Novatel/navMesseging.h"
 #include "I2C/i2c_config.h"
 #include "IO_handle/IO_handle.h"
+#include "udp_util/udp_conf.h"
+#include "lwip/tcpip.h"
 
 //#define TREGO_DEBUG
 
@@ -105,16 +106,14 @@ int main(void)
   */
 static void StartThread(void const * argument)
 {   
-  /* Create tcp_ip stack thread */
-  tcpip_init(NULL, NULL);
-  
   /* Initialize the LwIP stack */
+  tcpip_init(NULL, NULL);
+
   Netif_Config();
 
-  init_CPT7_broker();
+  init_udp_broker();
 
   I2C_start_listen();
-
 
   for( ;; )
   {
@@ -158,7 +157,6 @@ static void Netif_Config(void)
   
   /* add the network interface */    
   netif_add(&gnetif, &ipaddr, &netmask, &gw, NULL, &ethernetif_init, &tcpip_input);
-  
   /*  Registers the default network interface. */
   netif_set_default(&gnetif);
   

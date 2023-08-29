@@ -11,6 +11,11 @@
 #include "I2C/i2c_config.h"
 #include "main.h"
 
+#define MAX_MISSIONS 4
+#define MAX_WORDS 2
+#define MAX_SECRET_SIZE 16
+#define MISSIONS_HEADER_SIZE 5
+
 void ICD_handle(void *args);
 void HAL_I2C_SlaveRxCpltCallback(I2C_HandleTypeDef *hi2c);
 void HAL_I2C_SlaveTxCpltCallback(I2C_HandleTypeDef *hi2c);
@@ -105,10 +110,14 @@ typedef struct FireFlyStatus{
 
 typedef struct SecretCmd {
 	unsigned char msgType; // according to MessageTypeEnum
-	unsigned char secret1[16];
-	unsigned char secret2[16];
+	unsigned char secret1[MAX_SECRET_SIZE];
+	unsigned char secret2[MAX_SECRET_SIZE];
 	unsigned char cs;
 } SecretCmd;
 
+typedef struct {
+    int mission_number;
+    int priority;
+} Mission;
 
 #endif /* APPLICATION_USER_ICD_ICD_H_ */

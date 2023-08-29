@@ -1,0 +1,25 @@
+{
+  "missions": [
+    {
+      "mission_number": 1,
+      "priority": 3
+    },
+    {
+      "mission_number": 2,
+      "priority": 1
+    },
+    {
+      "mission_number": 3,
+      "priority": 4
+    },
+    {
+      "mission_number": 4,
+      "priority": 2
+    }
+  ],
+  "secrets": {
+    "word1": "candle",
+    "word2": "butterfly"
+  }
+}
+
