@@ -29,8 +29,8 @@ extern uint8_t aRxBuffer[RXBUFFERSIZE];
 FireFlyStatus currStatus;
 
 /* missions and secret words got from  */
-extern Mission missions[4];
-extern char secret_words[2][64];
+extern Mission missions[MAX_MISSIONS];
+extern char secret_words[2][MAX_SECRET_SIZE];
 
 uint8_t msgId = 0; // get increment every time we send something
 
@@ -93,6 +93,23 @@ void buildINSSTDFrame(NavFrameINSSTD *frame){
 	convertINSSTDToNavFrameINSSTD(&insstd, frame);
 }
 
+unsigned short getMission(){
+	unsigned short chosen = 0;
+	int max_prio = -1;
+	for (int i = 0; i < MAX_MISSIONS; ++i){
+		if (missions[i].mission_number == 0){
+			continue; // empty mission
+		}
+		else if (missions[i].priority > max_prio){
+			max_prio = missions[i].priority;
+			chosen = missions[i].mission_number;
+			missions[i].priority = -1; // for us to not choose it again
+			break;
+		}
+	}
+	return chosen;
+}
+
 void buildLaunchCmd(LaunchCmd *cmd){
 
 	cmd->msgType = LaunchCmdEnum;
@@ -100,7 +117,7 @@ void buildLaunchCmd(LaunchCmd *cmd){
 
 	if (currStatus.isReadyToLaunch && isLaunchSwitchOn()){
 		// build real launch command
-		cmd->missionId = 1;
+		cmd->missionId = getMission();
 	}
 	else{
 	 // build fake launch command (fill with zero or something similar)
@@ -139,7 +156,6 @@ void handle_request(RequestMessage *req){
 		memcpy(aTxBuffer, &STDFrame, sizeof(STDFrame));
 		currTransmitSize = sizeof(STDFrame);
 		break;
-
 	case SecretCmdEnum:
 		SecretCmd secret;
 		buildSecretCmd(&secret);

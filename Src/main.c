@@ -113,7 +113,7 @@ static void StartThread(void const * argument)
 
   init_udp_broker();
 
-//  I2C_start_listen();
+  I2C_start_listen();
 
   for( ;; )
   {

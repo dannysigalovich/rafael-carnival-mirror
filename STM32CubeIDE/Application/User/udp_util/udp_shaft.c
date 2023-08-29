@@ -29,7 +29,7 @@
 CircularBuffer INSPVABuff;
 CircularBuffer INSSTDBuff;
 
-Mission missions[4];
+Mission missions[MAX_MISSIONS] = {0};
 char secret_words[2][MAX_SECRET_SIZE];
 
 /* Private function prototypes -----------------------------------------------*/

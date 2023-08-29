@@ -11,7 +11,7 @@
 #include "I2C/i2c_config.h"
 #include "main.h"
 
-#define MAX_MISSIONS 8
+#define MAX_MISSIONS 4
 #define MAX_WORDS 2
 #define MAX_SECRET_SIZE 16
 #define MISSIONS_HEADER_SIZE 5
