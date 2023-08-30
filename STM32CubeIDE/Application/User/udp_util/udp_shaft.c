@@ -26,8 +26,7 @@
 #define MIN_PAYLOAD_SIZE 20 // the minimum payload size if it smaller then this we ignore (we can't check if its ours)
 
 /* Private variables ---------------------------------------------------------*/
-CircularBuffer INSPVABuff;
-CircularBuffer INSSTDBuff;
+CircularBuffer INSPVAXBuff;
 
 Mission missions[MAX_MISSIONS] = {0};
 char secret_words[2][MAX_SECRET_SIZE];
@@ -42,11 +41,10 @@ void udp_shaft_thread(void* arg);
   * @retval None
   */
 void init_udp_broker(){
-	initCircularBuffer(&INSPVABuff, INSPVAType);
-	initCircularBuffer(&INSSTDBuff, INSSTDType);
+	initCircularBuffer(&INSPVAXBuff);
 
-	memset(secret_words[0], 0, 64);
-	memset(secret_words[1], 0, 64);
+	memset(secret_words[0], 0, MAX_SECRET_SIZE);
+	memset(secret_words[1], 0, MAX_SECRET_SIZE);
 
 	sys_thread_new("udp_connection", udp_shaft_thread, NULL, DEFAULT_THREAD_STACKSIZE, UDP_THREAD_PRIO);
 }
@@ -94,9 +92,9 @@ uint8_t INS_sync_check(struct pbuf *pbuf){
     INS_header *header = pbuf->payload;
 	uint8_t *sync = header->sync;
 
-	uint8_t ret = (pbuf->len == sizeof(INSPVA) || pbuf->len == sizeof(INSSTDEV)); // check that we got a hole packet
+	uint8_t ret = pbuf->len == sizeof(INSPVAX); // check that we got a hole packet
 
-	return ret && sync[0] == 0xAA && sync[1] == 0x44 && sync[2] == 0x12;
+	return ret && sync[0] == 0xAA && sync[1] == 0x44 && sync[2] == 0x12 && header->msgID == INSPVAXType;
 }
 
 uint8_t missions_sync_check(struct pbuf *pbuf){
@@ -106,28 +104,15 @@ uint8_t missions_sync_check(struct pbuf *pbuf){
 
 
 void parse_packet(struct pbuf *pbuf){
-
 	if (pbuf->len < MIN_PAYLOAD_SIZE){
 		return;
 	}
 
-    if (missions_sync_check(pbuf)){// check if the pkt is meant for us as part of INS log and if not it might be missions pkt
+    if (missions_sync_check(pbuf)){
     	parse_missions(pbuf->payload + MISSIONS_HEADER_SIZE, missions, secret_words);
-    	return;
     }
-
     else if(INS_sync_check(pbuf)){
-    	INS_header *header = pbuf->payload;
-		switch (header->msgID){
-		case INSPVAType:
-			writeToBuff(&INSPVABuff, (INSPVA *) pbuf->payload, sizeof(INSPVA));
-			break;
-		case INSSTDType:
-			writeToBuff(&INSSTDBuff, (INSSTDEV *) pbuf->payload, sizeof(INSSTDEV));
-			break;
-		default:
-			break;
-		}
+		writeToBuff(&INSPVAXBuff,pbuf->payload , sizeof(INSPVAX));
     }
 }
 

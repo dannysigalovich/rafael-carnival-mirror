@@ -34,8 +34,7 @@ extern char secret_words[2][MAX_SECRET_SIZE];
 
 uint8_t msgId = 0; // get increment every time we send something
 
-extern CircularBuffer INSPVABuff;
-extern CircularBuffer INSSTDBuff;
+extern CircularBuffer INSPVAXBuff;
 
 enum FlowState flow = Recv;
 
@@ -43,54 +42,53 @@ enum FlowState flow = Recv;
 void HAL_I2C_SlaveRxCpltCallback(I2C_HandleTypeDef *hi2c){flow = Process;}
 void HAL_I2C_SlaveTxCpltCallback(I2C_HandleTypeDef *hi2c){flow = Recv;}
 
-
-void convertINSPVAToNavFrameINS(INSPVA *inspva, NavFrameINS *navFrame) {
-    navFrame->weeknumber = inspva->week;
-    navFrame->mSec = inspva->seconds;
-    navFrame->PositionLatitudeGeoRad = inspva->latitude;
-    navFrame->PositionLongitudeGeoRad = inspva->longitude;
-    navFrame->PositionAltitudeMeterAEL = inspva->height;
-    navFrame->VelocityNorthMeterPerSec = inspva->northVelocity;
-    navFrame->VelocityEastMeterPerSec = inspva->eastVelocity;
-    navFrame->VelocityDownMeterPerSec = -inspva->upVelocity;
-    navFrame->AzimuthDeg = inspva->azimuth;
-    navFrame->PitchDeg = inspva->pitch;
-    navFrame->RollDeg = inspva->roll;
-    navFrame->Status = inspva->status;
+void convertINSPVAXToNavFrameINS(INSPVAX *inspvax, NavFrameINS *navFrame) {
+    navFrame->weeknumber = inspvax->header.week;
+    navFrame->mSec = inspvax->header.ms;
+    navFrame->PositionLatitudeGeoRad = inspvax->latitude;
+    navFrame->PositionLongitudeGeoRad = inspvax->longitude;
+    navFrame->PositionAltitudeMeterAEL = inspvax->height;
+    navFrame->VelocityNorthMeterPerSec = inspvax->northVelocity;
+    navFrame->VelocityEastMeterPerSec = inspvax->eastVelocity;
+    navFrame->VelocityDownMeterPerSec = -inspvax->upVelocity;
+    navFrame->AzimuthDeg = inspvax->azimuth;
+    navFrame->PitchDeg = inspvax->pitch;
+    navFrame->RollDeg = inspvax->roll;
+    navFrame->Status = inspvax->status;
     navFrame->cs = 1;
 }
 
-void convertINSSTDToNavFrameINSSTD(INSSTDEV *insstd, NavFrameINSSTD *navFrame){
-	navFrame->StdLatitudeMeter = insstd->latitude_sigma;
-	navFrame->StdLongitudeMeter = insstd->longitude_sigma;
-	navFrame->StdAltitudeMeter = insstd->height_sigma;
-	navFrame->StdVelocityNorth = insstd->north_velocity_sigma;
-	navFrame->StdVelocityEast = insstd->east_velocity_sigma;
-	navFrame->StdVelocityDown = insstd->up_velocity_sigma;
-	navFrame->StdTrueHeadingDeg = insstd->azimuth_sigma;
-	navFrame->StdPitchDeg = insstd->pitch_sigma;
-	navFrame->StdRollDeg = insstd->roll_sigma;
+void convertINSPVAXToNavFrameINSSTD(INSPVAX *inspvax, NavFrameINSSTD *navFrame){
+	navFrame->StdLatitudeMeter = inspvax->latStdDev;
+	navFrame->StdLongitudeMeter = inspvax->longStdDev;
+	navFrame->StdAltitudeMeter = inspvax->heightStdDev;
+	navFrame->StdVelocityNorth = inspvax->northVelStdDev;
+	navFrame->StdVelocityEast = inspvax->eastVelStdDev;
+	navFrame->StdVelocityDown = inspvax->upVelStdDev;
+	navFrame->StdTrueHeadingDeg = inspvax->azimuthStdDev;
+	navFrame->StdPitchDeg = inspvax->pitchStdDev;
+	navFrame->StdRollDeg = inspvax->rollStdDev;
 	navFrame->cs = 1;
-}
 
+}
 void buildINSFrame(NavFrameINS *frame){
-	INSPVA inspva;
-	readINSPVA(&INSPVABuff, &inspva);
+	INSPVAX inspvax;
+	readINSPVAX(&INSPVAXBuff, &inspvax);
 
 	frame->msgType = NavInsEnum;
 	frame->msgId = msgId++;
 
-	convertINSPVAToNavFrameINS(&inspva, frame); // check how the real convert works
+	convertINSPVAXToNavFrameINS(&inspvax, frame); // check how the real convert works
 }
 
 void buildINSSTDFrame(NavFrameINSSTD *frame){
-	INSSTDEV insstd;
-	readINSSTD(&INSSTDBuff, &insstd);
+	INSPVAX inspvax;
+	readINSPVAX(&INSPVAXBuff, &inspvax);
 
 	frame->msgType = InsStdEnum;
 	frame->msgId = msgId++;
 
-	convertINSSTDToNavFrameINSSTD(&insstd, frame);
+	convertINSPVAXToNavFrameINSSTD(&inspvax, frame);
 }
 
 unsigned short getMission(){
@@ -128,8 +126,8 @@ void buildLaunchCmd(LaunchCmd *cmd){
 
 void buildSecretCmd(SecretCmd *secret){
 	secret->msgType = SecretCmdEnum;
-	memcpy(secret->secret1, secret_words[0], 16);
-	memcpy(secret->secret2, secret_words[1], 16);
+	memcpy(secret->secret1, secret_words[0], MAX_SECRET_SIZE);
+	memcpy(secret->secret2, secret_words[1], MAX_SECRET_SIZE);
 	secret->cs = 1;
 }
 

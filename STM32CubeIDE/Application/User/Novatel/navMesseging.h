@@ -16,39 +16,9 @@ void init_novatel_debug();
 
 typedef enum INSType{
 	INSPVAType = 507,
-	INSSTDType = 2051
+	INSPVAXType = 1465,
+	INSSTDType = 2051,
 } INSType;
-
-
-typedef enum{
-	INS_INACTIVE = 0,
-	INS_ALIGNING,
-	INS_HIGH_VARIANCE,
-	INS_SOLUTION_GOOD,
-	INS_SOLUTION_FREE = 6,
-	INS_ALIGNMENT_COMPLETE,
-	DETERMINING_ORIENTATION,
-	WAITING_INITIALPOS,
-	WAITING_AZIMUTH,
-	INITIALIZING_BIASES,
-	MOTION_DETECT,
-	WAITING_ALIGNMENTORIENTATION
-} INS_Status;
-
-
-typedef enum {
-    TIME_UNKNOWN = 20,
-    TIME_APPROXIMATE = 60,
-    TIME_COARSE_ADJUSTING = 80,
-    TIME_COARSE = 100,
-    TIME_COARSE_STEERING = 120,
-    TIME_FREEWHEELING = 130,
-    TIME_FINE_ADJUSTING = 140,
-    TIME_FINE = 160,
-    TIME_FINE_BACKUP_STEERING = 170,
-    TIME_FINE_STEERING = 180,
-    TIME_SATTIME = 200
-} TimeStatus;
 
 
 typedef struct {
@@ -57,16 +27,15 @@ typedef struct {
 	unsigned short msgID;
 	uint8_t msgType;
 	uint8_t port;
-	uint8_t msgLength; // The length in bytes of the body of the message, not including the header nor the CRC
+	unsigned short  msgLength; // The length in bytes of the body of the message, not including the header nor the CRC
 	unsigned short seq;
 	uint8_t idleTime;
-	TimeStatus timeStatus;
+	uint8_t timeStatus;
 	unsigned short week;
 	uint32_t ms;
 	unsigned long recevierStatus;
 	unsigned short reserved;
 	unsigned short recevierSWVersion;
-
 } INS_header;
 
 typedef struct {
@@ -82,8 +51,8 @@ typedef struct {
 	double roll;
 	double pitch;
 	double azimuth;
-	INS_Status status;
-	unsigned int crc;
+	uint32_t status;
+	uint32_t crc;
 } INSPVA;
 
 
@@ -103,7 +72,39 @@ typedef struct INSSTDEV{
 	unsigned short reserved_1;        // Reserved (Ushort)
 	unsigned long reserved_2;         // Reserved (Ulong)
 	unsigned long reserved_3;         // Reserved (Ulong)
-	unsigned int crc;                 // 32-bit CRC (Hex)
+	uint32_t crc;                 // 32-bit CRC (Hex)
 } INSSTDEV;
+
+
+
+typedef struct __attribute__((packed, aligned(1))) INSPVAX{
+	INS_header header;
+	uint32_t status;
+	uint32_t posType;
+    double latitude;
+    double longitude;
+    double height;
+    float undulation;
+    double northVelocity;
+    double eastVelocity;
+    double upVelocity;
+    double roll;
+    double pitch;
+    double azimuth;
+    float latStdDev;
+    float longStdDev;
+    float heightStdDev;
+    float northVelStdDev;
+    float eastVelStdDev;
+    float upVelStdDev;
+    float rollStdDev;
+    float pitchStdDev;
+    float azimuthStdDev;
+	uint32_t extSolutionStatus;
+    unsigned short timeSinceUpdate;
+    uint32_t crc;                 // 32-bit CRC (Hex)
+} INSPVAX;
+
+
 
 #endif /* NAVMESSEGING_H_ */
