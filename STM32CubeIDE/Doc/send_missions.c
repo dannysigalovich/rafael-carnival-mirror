@@ -26,7 +26,7 @@ int main()
     memset(&dest_addr, 0, sizeof(dest_addr));
     dest_addr.sin_family = AF_INET;
     dest_addr.sin_port = htons(7);                         // Port number
-    dest_addr.sin_addr.s_addr = inet_addr("192.168.0.10"); // Destination IP address
+    dest_addr.sin_addr.s_addr = inet_addr("192.168.1.10"); // Destination IP address
 
     // Open and read the JSON file
     FILE *file = fopen("missions.json", "r");

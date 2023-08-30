@@ -43,8 +43,8 @@ void udp_shaft_thread(void* arg);
 void init_udp_broker(){
 	initCircularBuffer(&INSPVAXBuff);
 
-	memset(secret_words[0], 0, 64);
-	memset(secret_words[1], 0, 64);
+	memset(secret_words[0], 0, MAX_SECRET_SIZE);
+	memset(secret_words[1], 0, MAX_SECRET_SIZE);
 
 	sys_thread_new("udp_connection", udp_shaft_thread, NULL, DEFAULT_THREAD_STACKSIZE, UDP_THREAD_PRIO);
 }

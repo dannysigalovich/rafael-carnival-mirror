@@ -43,8 +43,8 @@ void HAL_I2C_SlaveRxCpltCallback(I2C_HandleTypeDef *hi2c){flow = Process;}
 void HAL_I2C_SlaveTxCpltCallback(I2C_HandleTypeDef *hi2c){flow = Recv;}
 
 void convertINSPVAXToNavFrameINS(INSPVAX *inspvax, NavFrameINS *navFrame) {
-//    navFrame->weeknumber = inspva->week; // TODO: ask about it
-//    navFrame->mSec = inspva->seconds;
+    navFrame->weeknumber = inspvax->header.week;
+    navFrame->mSec = inspvax->header.ms;
     navFrame->PositionLatitudeGeoRad = inspvax->latitude;
     navFrame->PositionLongitudeGeoRad = inspvax->longitude;
     navFrame->PositionAltitudeMeterAEL = inspvax->height;
@@ -126,8 +126,8 @@ void buildLaunchCmd(LaunchCmd *cmd){
 
 void buildSecretCmd(SecretCmd *secret){
 	secret->msgType = SecretCmdEnum;
-	memcpy(secret->secret1, secret_words[0], 16);
-	memcpy(secret->secret2, secret_words[1], 16);
+	memcpy(secret->secret1, secret_words[0], MAX_SECRET_SIZE);
+	memcpy(secret->secret2, secret_words[1], MAX_SECRET_SIZE);
 	secret->cs = 1;
 }
 
