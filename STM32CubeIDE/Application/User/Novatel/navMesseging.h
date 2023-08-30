@@ -10,6 +10,7 @@
 
 #include <stdint.h>
 
+#define PACKED __attribute__((packed, aligned(1)))
 #define CPT7_BROKER_THREAD_PRIO    ( osPriorityAboveNormal )
 
 void init_novatel_debug();
@@ -21,7 +22,7 @@ typedef enum INSType{
 } INSType;
 
 
-typedef struct {
+typedef struct PACKED {
 	uint8_t sync[3]; // Hexadecimal 0xAA, 0x44, 0x12
 	uint8_t headLength;
 	unsigned short msgID;
@@ -38,7 +39,7 @@ typedef struct {
 	unsigned short recevierSWVersion;
 } INS_header;
 
-typedef struct {
+typedef struct PACKED{
 	INS_header header;
 	unsigned long week;
 	double seconds;
@@ -56,7 +57,7 @@ typedef struct {
 } INSPVA;
 
 
-typedef struct INSSTDEV{
+typedef struct PACKED INSSTDEV{
 	INS_header header;
 	float latitude_sigma;             // Latitude standard deviation (m)
 	float longitude_sigma;            // Longitude standard deviation (m)
@@ -77,7 +78,7 @@ typedef struct INSSTDEV{
 
 
 
-typedef struct __attribute__((packed, aligned(1))) INSPVAX{
+typedef struct PACKED INSPVAX{
 	INS_header header;
 	uint32_t status;
 	uint32_t posType;

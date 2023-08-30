@@ -9,12 +9,13 @@
 #define APPLICATION_USER_ICD_ICD_H_
 
 #include "I2C/i2c_config.h"
-#include "main.h"
 
 #define MAX_MISSIONS 4
 #define MAX_WORDS 2
 #define MAX_SECRET_SIZE 16
 #define MISSIONS_HEADER_SIZE 5
+
+#define PACKED __attribute__((packed, aligned(1)))
 
 void ICD_handle(void *args);
 void HAL_I2C_SlaveRxCpltCallback(I2C_HandleTypeDef *hi2c);
@@ -40,7 +41,7 @@ enum MessageTypeEnum{
 	SecretCmdEnum = 10
 };
 
-typedef struct RequestMessage{
+typedef struct PACKED RequestMessage{
     unsigned char msgType;
     unsigned char requestedType;
     unsigned char msgSize;
@@ -48,7 +49,7 @@ typedef struct RequestMessage{
 
 
 
-typedef struct NavFrameINS{
+typedef struct PACKED NavFrameINS{
     unsigned char msgType; // according to MessageTypeEnum
     unsigned char msgId;   // Incremental
     unsigned short weeknumber;
@@ -67,7 +68,7 @@ typedef struct NavFrameINS{
 
 } NavFrameINS;
 
-typedef struct NavFrameINSSTD {
+typedef struct PACKED NavFrameINSSTD {
 	unsigned char msgType;
 	unsigned char msgId;
 	float StdLatitudeMeter;
@@ -80,7 +81,7 @@ typedef struct NavFrameINSSTD {
 	float StdPitchDeg;
 	float StdRollDeg;
 	unsigned char cs;
-}NavFrameINSSTD ;
+} NavFrameINSSTD;
 
 enum AltitudeTypeEnum {
 	RelativeEnum = 0,
@@ -90,7 +91,7 @@ enum AltitudeTypeEnum {
 	AboveTakeoffEnum
 };
 
-typedef struct LaunchCmd{
+typedef struct PACKED LaunchCmd{
     unsigned char msgType; // according to MessageTypeEnum
     unsigned char msgId;   // Incremental
     unsigned short missionId;
@@ -98,7 +99,7 @@ typedef struct LaunchCmd{
 } LaunchCmd;
 
 
-typedef struct FireFlyStatus{
+typedef struct PACKED FireFlyStatus{
 	unsigned char msgType;
     unsigned char msgId;
     unsigned char isReadyToLaunch; // 0 means NOT ready
@@ -108,7 +109,7 @@ typedef struct FireFlyStatus{
 } FireFlyStatus;
 
 
-typedef struct SecretCmd {
+typedef struct PACKED SecretCmd {
 	unsigned char msgType; // according to MessageTypeEnum
 	unsigned char secret1[MAX_SECRET_SIZE];
 	unsigned char secret2[MAX_SECRET_SIZE];
