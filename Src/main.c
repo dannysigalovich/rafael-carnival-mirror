@@ -117,6 +117,8 @@ static void StartThread(void const *argument)
 
   I2C_start_listen();
 
+  startLaunchSequence();
+
   for (;;)
   {
     /* Delete the Init Thread */
