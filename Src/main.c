@@ -21,6 +21,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "string.h"
 #include "cmsis_os.h"
 #include "ethernetif.h"
 #include "lwip/netif.h"
@@ -350,6 +351,19 @@ void Error_Handler(void)
   {
   }
   /* USER CODE END Error_Handler_Debug */
+}
+
+/* This function taking a taskHandle and returning the mauz number (0 - 3) which the handler is taking care of*/
+int getMauzNumber(TaskHandle_t handle){
+	char *taskName = pcTaskGetName(handle);
+	if (taskName == NULL) return -1;
+
+	size_t mauzOffset = strlen(taskName) - 5;
+
+	if (!strncmp(taskName + mauzOffset, "mauz", 4)){
+		return *(taskName + strlen(taskName) - 1) - '0';
+	}
+	return -1;
 }
 
 #ifdef USE_FULL_ASSERT

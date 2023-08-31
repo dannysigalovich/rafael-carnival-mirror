@@ -13,7 +13,7 @@
 #include "stm32h7xx_hal_i2c.h"
 #include <string.h>
 #include "Novatel/navMesseging.h"
-
+#include "missionManager/missionManager.h"
 
 /* I2C handler declaration */
 extern I2C_HandleTypeDef I2cHandle;
@@ -29,7 +29,7 @@ extern uint8_t aRxBuffer[RXBUFFERSIZE];
 FireFlyStatus currStatus;
 
 /* missions and secret words got from  */
-extern Mission missions[MAX_MISSIONS];
+extern MissionManager misManager;
 extern char secret_words[2][MAX_SECRET_SIZE];
 
 uint8_t msgId = 0; // get increment every time we send something
@@ -71,6 +71,7 @@ void convertINSPVAXToNavFrameINSSTD(INSPVAX *inspvax, NavFrameINSSTD *navFrame){
 	navFrame->cs = 1;
 
 }
+
 void buildINSFrame(NavFrameINS *frame){
 	INSPVAX inspvax;
 	readINSPVAX(&INSPVAXBuff, &inspvax);
@@ -91,23 +92,6 @@ void buildINSSTDFrame(NavFrameINSSTD *frame){
 	convertINSPVAXToNavFrameINSSTD(&inspvax, frame);
 }
 
-unsigned short getMission(){
-	unsigned short chosen = 0;
-	int max_prio = -1;
-	for (int i = 0; i < MAX_MISSIONS; ++i){
-		if (missions[i].mission_number == 0){
-			continue; // empty mission
-		}
-		else if (missions[i].priority > max_prio){
-			max_prio = missions[i].priority;
-			chosen = missions[i].mission_number;
-			missions[i].priority = -1; // for us to not choose it again
-			break;
-		}
-	}
-	return chosen;
-}
-
 void buildLaunchCmd(LaunchCmd *cmd){
 
 	cmd->msgType = LaunchCmdEnum;
@@ -115,13 +99,14 @@ void buildLaunchCmd(LaunchCmd *cmd){
 
 	if (currStatus.isReadyToLaunch && isLaunchSwitchOn()){
 		// build real launch command
-		cmd->missionId = getMission();
+		TaskHandle_t currHandle = xTaskGetCurrentTaskHandle();
+		cmd->missionId = missionAssigned(&misManager, getMauzNumber(currHandle));
 	}
 	else{
 	 // build fake launch command (fill with zero or something similar)
 		cmd->missionId = 0;
 	}
-	cmd->cs = 0;
+	cmd->cs = 1;
 }
 
 void buildSecretCmd(SecretCmd *secret){
@@ -160,7 +145,7 @@ void handle_request(RequestMessage *req){
 		memcpy(aTxBuffer, &secret, sizeof(secret));
 		currTransmitSize = sizeof(secret);
 		break;
-	default: // i saw this in the arduino and guess it can help in an unknown msg
+	default:
 		char data[100] = {0};
 		data[0] = 2;
 		data[1] = 12; // msnId(H)
@@ -192,6 +177,7 @@ void ICD_process(){
 		break;
 
 	default:
+		flow = Recv; // in case of us not recognize the msg we return to recv state
 		break;
 	}
 }

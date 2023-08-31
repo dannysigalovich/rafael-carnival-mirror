@@ -10,7 +10,6 @@
 
 #include "I2C/i2c_config.h"
 
-#define MAX_MISSIONS 4
 #define MAX_WORDS 2
 #define MAX_SECRET_SIZE 16
 #define MISSIONS_HEADER_SIZE 5
@@ -83,13 +82,6 @@ typedef struct PACKED NavFrameINSSTD {
 	unsigned char cs;
 } NavFrameINSSTD;
 
-enum AltitudeTypeEnum {
-	RelativeEnum = 0,
-	PercentageEnum,
-	ASLEnum,
-	AGLEnum,
-	AboveTakeoffEnum
-};
 
 typedef struct PACKED LaunchCmd{
     unsigned char msgType; // according to MessageTypeEnum
@@ -115,10 +107,5 @@ typedef struct PACKED SecretCmd {
 	unsigned char secret2[MAX_SECRET_SIZE];
 	unsigned char cs;
 } SecretCmd;
-
-typedef struct {
-    int mission_number;
-    int priority;
-} Mission;
 
 #endif /* APPLICATION_USER_ICD_ICD_H_ */

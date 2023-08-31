@@ -17,7 +17,7 @@ I2C_HandleTypeDef I2cHandle;
 /* Buffer used for transmission */
 uint8_t aTxBuffer[TXBUFFERSIZE];
 /* Buffer used for reception */
-uint8_t aRxBuffer[RXBUFFERSIZE];
+uint8_t aRxBuffer[RXBUFFERSIZE] = {-1};
 
 void I2Cx_ER_IRQHandler(void);
 void I2Cx_EV_IRQHandler(void);
@@ -47,7 +47,7 @@ void I2C_Init(){
 
 
 void I2C_start_listen(){
-	sys_thread_new("I2C_handle", ICD_handle, NULL, DEFAULT_THREAD_STACKSIZE, I2C_HANDLE_THREAD_PRIO);
+	sys_thread_new("I2C_mauz2", ICD_handle, NULL, DEFAULT_THREAD_STACKSIZE, I2C_HANDLE_THREAD_PRIO);
 }
 
 

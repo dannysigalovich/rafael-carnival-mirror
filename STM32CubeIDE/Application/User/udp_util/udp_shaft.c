@@ -18,6 +18,7 @@
 #include "udp_conf.h"
 #include "lwjson/json_parser/json_parser.h"
 #include "ICD/ICD.h"
+#include "missionManager/missionManager.h"
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
@@ -28,7 +29,7 @@
 /* Private variables ---------------------------------------------------------*/
 CircularBuffer INSPVAXBuff;
 
-Mission missions[MAX_MISSIONS] = {0};
+MissionManager misManager;
 char secret_words[2][MAX_SECRET_SIZE];
 
 /* Private function prototypes -----------------------------------------------*/
@@ -42,6 +43,8 @@ void udp_shaft_thread(void* arg);
   */
 void init_udp_broker(){
 	initCircularBuffer(&INSPVAXBuff);
+
+	initializeMissionManager(&misManager);
 
 	memset(secret_words[0], 0, MAX_SECRET_SIZE);
 	memset(secret_words[1], 0, MAX_SECRET_SIZE);
@@ -109,7 +112,9 @@ void parse_packet(struct pbuf *pbuf){
 	}
 
     if (missions_sync_check(pbuf)){
+    	Mission missions[MAX_MISSIONS] = {0};
     	parse_missions(pbuf->payload + MISSIONS_HEADER_SIZE, missions, secret_words);
+    	setMissions(&misManager, missions);
     }
     else if(INS_sync_check(pbuf)){
 		writeToBuff(&INSPVAXBuff,pbuf->payload , sizeof(INSPVAX));
