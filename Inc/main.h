@@ -27,6 +27,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "stm32h7xx_hal.h"
 #include "stm32h7xx_nucleo.h"
+#include "cmsis_os.h"
 
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/
@@ -57,6 +58,7 @@
 /* Exported macro ------------------------------------------------------------*/
 /* Exported functions ------------------------------------------------------- */
 void Error_Handler(void);
+int getMauzNumber(TaskHandle_t handle);
 
 #ifdef __cplusplus
 }

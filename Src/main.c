@@ -1,37 +1,38 @@
 /**
-  ******************************************************************************
-  * @file    LwIP/LwIP_HTTP_Server_Netconn_RTOS/Src/main.c 
-  * @author  MCD Application Team
-  * @brief   This sample code implements a http server application based on 
-  *          Netconn API of LwIP stack and FreeRTOS. This application uses 
-  *          STM32H7xx the ETH HAL API to transmit and receive data. 
-  *          The communication is done with a web browser of a remote PC.
-  ******************************************************************************
-  * @attention
-  *
-  * Copyright (c) 2017 STMicroelectronics.
-  * All rights reserved.
-  *
-  * This software is licensed under terms that can be found in the LICENSE file
-  * in the root directory of this software component.
-  * If no LICENSE file comes with this software, it is provided AS-IS.
-  *
-  ******************************************************************************
-  */
+ ******************************************************************************
+ * @file    LwIP/LwIP_HTTP_Server_Netconn_RTOS/Src/main.c
+ * @author  MCD Application Team
+ * @brief   This sample code implements a http server application based on
+ *          Netconn API of LwIP stack and FreeRTOS. This application uses
+ *          STM32H7xx the ETH HAL API to transmit and receive data.
+ *          The communication is done with a web browser of a remote PC.
+ ******************************************************************************
+ * @attention
+ *
+ * Copyright (c) 2017 STMicroelectronics.
+ * All rights reserved.
+ *
+ * This software is licensed under terms that can be found in the LICENSE file
+ * in the root directory of this software component.
+ * If no LICENSE file comes with this software, it is provided AS-IS.
+ *
+ ******************************************************************************
+ */
 
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "string.h"
 #include "cmsis_os.h"
 #include "ethernetif.h"
 #include "lwip/netif.h"
 #include "app_ethernet.h"
 #include "Novatel/navMesseging.h"
 #include "I2C/i2c_config.h"
-#include "IO_handle/IO_handle.h"
+#include "IO/IO.h"
 #include "udp_util/udp_conf.h"
 #include "lwip/tcpip.h"
 
-//#define TREGO_DEBUG
+// #define TREGO_DEBUG
 
 #ifdef TREGO_DEBUG
 #include "uart/uart_config.h"
@@ -47,7 +48,7 @@ struct netif gnetif; /* network interface structure */
 /* Private function prototypes -----------------------------------------------*/
 static void SystemClock_Config(void);
 static void BSP_Config(void);
-static void StartThread(void const * argument);
+static void StartThread(void const *argument);
 static void Netif_Config(void);
 static void MPU_Config(void);
 static void CPU_CACHE_Enable(void);
@@ -55,15 +56,15 @@ static void CPU_CACHE_Enable(void);
 /* Private functions ---------------------------------------------------------*/
 
 /**
-  * @brief  Main program
-  * @param  None
-  * @retval None
-  */
+ * @brief  Main program
+ * @param  None
+ * @retval None
+ */
 int main(void)
 {
   /* Configure the MPU attributes as Device memory for ETH DMA descriptors */
   MPU_Config();
-  
+
   /* Enable the CPU Cache */
   CPU_CACHE_Enable();
 
@@ -72,40 +73,44 @@ int main(void)
        - Set NVIC Group Priority to 4
        - Low Level Initialization
      */
-  HAL_Init();  
+  HAL_Init();
 
   /* Configure the system clock to 400 MHz */
-  SystemClock_Config(); 
-  
+  SystemClock_Config();
+
   /* Configure the LCD ...*/
   BSP_Config();
-  
+
 #ifdef TREGO_DEBUG
   MX_USART2_UART_Init();
 #endif
 
-  I2C_Init();
-
   GPIO_Config();
+
+  while(!is_power_on());
+  power_on_realy();
+
+  I2C_Init();
 
   /* Init thread */
   osThreadDef(Start, StartThread, osPriorityNormal, 0, configMINIMAL_STACK_SIZE * 4);
-  osThreadCreate (osThread(Start), NULL);
+  osThreadCreate(osThread(Start), NULL);
 
   /* Start scheduler */
   osKernelStart();
-  
+
   /* We should never get here as control is now taken by the scheduler */
-  for( ;; );
+  for (;;)
+    ;
 }
 
 /**
-  * @brief  Start Thread 
-  * @param  argument not used
-  * @retval None
-  */
-static void StartThread(void const * argument)
-{   
+ * @brief  Start Thread
+ * @param  argument not used
+ * @retval None
+ */
+static void StartThread(void const *argument)
+{
   /* Initialize the LwIP stack */
   tcpip_init(NULL, NULL);
 
@@ -115,18 +120,20 @@ static void StartThread(void const * argument)
 
   I2C_start_listen();
 
-  for( ;; )
+  startLaunchSequence();
+
+  for (;;)
   {
-    /* Delete the Init Thread */ 
+    /* Delete the Init Thread */
     osThreadTerminate(NULL);
   }
 }
 
 /**
-  * @brief  BSP Configuration 
-  * @param  None
-  * @retval None
-  */
+ * @brief  BSP Configuration
+ * @param  None
+ * @retval None
+ */
 static void BSP_Config(void)
 {
   BSP_LED_Init(LED1);
@@ -135,75 +142,75 @@ static void BSP_Config(void)
 }
 
 /**
-  * @brief  Initializes the lwIP stack
-  * @param  None
-  * @retval None
-  */
+ * @brief  Initializes the lwIP stack
+ * @param  None
+ * @retval None
+ */
 static void Netif_Config(void)
 {
   ip_addr_t ipaddr;
   ip_addr_t netmask;
   ip_addr_t gw;
- 
+
 #if LWIP_DHCP
   ip_addr_set_zero_ip4(&ipaddr);
   ip_addr_set_zero_ip4(&netmask);
   ip_addr_set_zero_ip4(&gw);
 #else
-  IP_ADDR4(&ipaddr,IP_ADDR0,IP_ADDR1,IP_ADDR2,IP_ADDR3);
-  IP_ADDR4(&netmask,NETMASK_ADDR0,NETMASK_ADDR1,NETMASK_ADDR2,NETMASK_ADDR3);
-  IP_ADDR4(&gw,GW_ADDR0,GW_ADDR1,GW_ADDR2,GW_ADDR3);
+  IP_ADDR4(&ipaddr, IP_ADDR0, IP_ADDR1, IP_ADDR2, IP_ADDR3);
+  IP_ADDR4(&netmask, NETMASK_ADDR0, NETMASK_ADDR1, NETMASK_ADDR2, NETMASK_ADDR3);
+  IP_ADDR4(&gw, GW_ADDR0, GW_ADDR1, GW_ADDR2, GW_ADDR3);
 #endif /* LWIP_DHCP */
-  
-  /* add the network interface */    
+
+  /* add the network interface */
   netif_add(&gnetif, &ipaddr, &netmask, &gw, NULL, &ethernetif_init, &tcpip_input);
   /*  Registers the default network interface. */
   netif_set_default(&gnetif);
-  
-  ethernet_link_status_updated(&gnetif); 
-  
-#if LWIP_NETIF_LINK_CALLBACK 
+
+  ethernet_link_status_updated(&gnetif);
+
+#if LWIP_NETIF_LINK_CALLBACK
   netif_set_link_callback(&gnetif, ethernet_link_status_updated);
-  
-  osThreadDef(EthLink, ethernet_link_thread, osPriorityNormal, 0, configMINIMAL_STACK_SIZE *2);
-  osThreadCreate (osThread(EthLink), &gnetif);
-#endif   
- 
+
+  osThreadDef(EthLink, ethernet_link_thread, osPriorityNormal, 0, configMINIMAL_STACK_SIZE * 2);
+  osThreadCreate(osThread(EthLink), &gnetif);
+#endif
+
 #if LWIP_DHCP
   /* Start DHCPClient */
   osThreadDef(DHCP, DHCP_Thread, osPriorityBelowNormal, 0, configMINIMAL_STACK_SIZE * 2);
-  osThreadCreate (osThread(DHCP), &gnetif);
-#endif 
+  osThreadCreate(osThread(DHCP), &gnetif);
+#endif
 }
 
 /**
-  * @brief  System Clock Configuration
-  *         The system Clock is configured as follow : 
-  *            System Clock source            = PLL (HSE BYPASS)
-  *            SYSCLK(Hz)                     = 400000000 (CPU Clock)
-  *            HCLK(Hz)                       = 200000000 (AXI and AHBs Clock)
-  *            AHB Prescaler                  = 2
-  *            D1 APB3 Prescaler              = 2 (APB3 Clock  100MHz)
-  *            D2 APB1 Prescaler              = 2 (APB1 Clock  100MHz)
-  *            D2 APB2 Prescaler              = 2 (APB2 Clock  100MHz)
-  *            D3 APB4 Prescaler              = 2 (APB4 Clock  100MHz)
-  *            HSE Frequency(Hz)              = 8000000
-  *            PLL_M                          = 4
-  *            PLL_N                          = 400
-  *            PLL_P                          = 2
-  *            PLL_Q                          = 4
-  *            PLL_R                          = 2
-  *            VDD(V)                         = 3.3
-  *            Flash Latency(WS)              = 4
-  * @param  None
-  * @retval None
-  */
+ * @brief  System Clock Configuration
+ *         The system Clock is configured as follow :
+ *            System Clock source            = PLL (HSE BYPASS)
+ *            SYSCLK(Hz)                     = 400000000 (CPU Clock)
+ *            HCLK(Hz)                       = 200000000 (AXI and AHBs Clock)
+ *            AHB Prescaler                  = 2
+ *            D1 APB3 Prescaler              = 2 (APB3 Clock  100MHz)
+ *            D2 APB1 Prescaler              = 2 (APB1 Clock  100MHz)
+ *            D2 APB2 Prescaler              = 2 (APB2 Clock  100MHz)
+ *            D3 APB4 Prescaler              = 2 (APB4 Clock  100MHz)
+ *            HSE Frequency(Hz)              = 8000000
+ *            PLL_M                          = 4
+ *            PLL_N                          = 400
+ *            PLL_P                          = 2
+ *            PLL_Q                          = 4
+ *            PLL_R                          = 2
+ *            VDD(V)                         = 3.3
+ *            Flash Latency(WS)              = 4
+ * @param  None
+ * @retval None
+ */
 static void SystemClock_Config(void)
 {
   RCC_ClkInitTypeDef RCC_ClkInitStruct;
   RCC_OscInitTypeDef RCC_OscInitStruct;
   HAL_StatusTypeDef ret = HAL_OK;
-  
+
   /*!< Supply configuration update enable */
   HAL_PWREx_ConfigSupply(PWR_LDO_SUPPLY);
 
@@ -212,11 +219,13 @@ static void SystemClock_Config(void)
      regarding system frequency refer to product datasheet.  */
   __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
 
-  while(!__HAL_PWR_GET_FLAG(PWR_FLAG_VOSRDY)) {}
-  
+  while (!__HAL_PWR_GET_FLAG(PWR_FLAG_VOSRDY))
+  {
+  }
+
   /* Enable D2 domain SRAM3 Clock (0x30040000 AXI)*/
   __HAL_RCC_D2SRAM3_CLK_ENABLE();
-  
+
   /* Enable HSE Oscillator and activate PLL with HSE as source */
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
   RCC_OscInitStruct.HSEState = RCC_HSE_BYPASS;
@@ -235,41 +244,43 @@ static void SystemClock_Config(void)
   RCC_OscInitStruct.PLL.PLLVCOSEL = RCC_PLL1VCOWIDE;
   RCC_OscInitStruct.PLL.PLLRGE = RCC_PLL1VCIRANGE_1;
   ret = HAL_RCC_OscConfig(&RCC_OscInitStruct);
-  if(ret != HAL_OK)
+  if (ret != HAL_OK)
   {
-    while(1);
+    while (1)
+      ;
   }
-  
+
   /* Select PLL as system clock source and configure  bus clocks dividers */
-  RCC_ClkInitStruct.ClockType = (RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_D1PCLK1 | RCC_CLOCKTYPE_PCLK1 | \
-                                 RCC_CLOCKTYPE_PCLK2  | RCC_CLOCKTYPE_D3PCLK1);
+  RCC_ClkInitStruct.ClockType = (RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_D1PCLK1 | RCC_CLOCKTYPE_PCLK1 |
+                                 RCC_CLOCKTYPE_PCLK2 | RCC_CLOCKTYPE_D3PCLK1);
 
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
   RCC_ClkInitStruct.SYSCLKDivider = RCC_SYSCLK_DIV1;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_HCLK_DIV2;
-  RCC_ClkInitStruct.APB3CLKDivider = RCC_APB3_DIV2;  
-  RCC_ClkInitStruct.APB1CLKDivider = RCC_APB1_DIV2; 
-  RCC_ClkInitStruct.APB2CLKDivider = RCC_APB2_DIV2; 
-  RCC_ClkInitStruct.APB4CLKDivider = RCC_APB4_DIV2; 
+  RCC_ClkInitStruct.APB3CLKDivider = RCC_APB3_DIV2;
+  RCC_ClkInitStruct.APB1CLKDivider = RCC_APB1_DIV2;
+  RCC_ClkInitStruct.APB2CLKDivider = RCC_APB2_DIV2;
+  RCC_ClkInitStruct.APB4CLKDivider = RCC_APB4_DIV2;
   ret = HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_4);
-  if(ret != HAL_OK)
+  if (ret != HAL_OK)
   {
-    while(1);
+    while (1)
+      ;
   }
 }
 
 /**
-  * @brief  Configure the MPU attributes 
-  * @param  None
-  * @retval None
-  */
+ * @brief  Configure the MPU attributes
+ * @param  None
+ * @retval None
+ */
 static void MPU_Config(void)
 {
   MPU_Region_InitTypeDef MPU_InitStruct;
-  
+
   /* Disable the MPU */
   HAL_MPU_Disable();
-  
+
   /* Configure the MPU as Strongly ordered for not defined regions */
   MPU_InitStruct.Enable = MPU_REGION_ENABLE;
   MPU_InitStruct.BaseAddress = 0x00;
@@ -282,10 +293,10 @@ static void MPU_Config(void)
   MPU_InitStruct.TypeExtField = MPU_TEX_LEVEL0;
   MPU_InitStruct.SubRegionDisable = 0x87;
   MPU_InitStruct.DisableExec = MPU_INSTRUCTION_ACCESS_DISABLE;
-  
+
   HAL_MPU_ConfigRegion(&MPU_InitStruct);
-  
-  /* Configure the MPU attributes as Device not cacheable 
+
+  /* Configure the MPU attributes as Device not cacheable
      for ETH DMA descriptors */
   MPU_InitStruct.Enable = MPU_REGION_ENABLE;
   MPU_InitStruct.BaseAddress = 0x30000000;
@@ -300,7 +311,7 @@ static void MPU_Config(void)
   MPU_InitStruct.DisableExec = MPU_INSTRUCTION_ACCESS_ENABLE;
 
   HAL_MPU_ConfigRegion(&MPU_InitStruct);
-  
+
   /* Configure the MPU attributes as Normal Non Cacheable
      for LwIP RAM heap which contains the Tx buffers */
   MPU_InitStruct.Enable = MPU_REGION_ENABLE;
@@ -322,10 +333,10 @@ static void MPU_Config(void)
 }
 
 /**
-  * @brief  CPU L1-Cache enable.
-  * @param  None
-  * @retval None
-  */
+ * @brief  CPU L1-Cache enable.
+ * @param  None
+ * @retval None
+ */
 static void CPU_CACHE_Enable(void)
 {
   /* Enable I-Cache */
@@ -334,7 +345,6 @@ static void CPU_CACHE_Enable(void)
   /* Enable D-Cache */
   SCB_EnableDCache();
 }
-
 
 void Error_Handler(void)
 {
@@ -348,17 +358,30 @@ void Error_Handler(void)
   /* USER CODE END Error_Handler_Debug */
 }
 
-#ifdef  USE_FULL_ASSERT
+/* This function taking a taskHandle and returning the mauz number (0 - 3) which the handler is taking care of*/
+int getMauzNumber(TaskHandle_t handle){
+	char *taskName = pcTaskGetName(handle);
+	if (taskName == NULL) return -1;
+
+	size_t mauzOffset = strlen(taskName) - 5;
+
+	if (!strncmp(taskName + mauzOffset, "mauz", 4)){
+		return *(taskName + strlen(taskName) - 1) - '0';
+	}
+	return -1;
+}
+
+#ifdef USE_FULL_ASSERT
 
 /**
-  * @brief  Reports the name of the source file and the source line number
-  *         where the assert_param error has occurred.
-  * @param  file: pointer to the source file name
-  * @param  line: assert_param error line source number
-  * @retval None
-  */
-void assert_failed(uint8_t* file, uint32_t line)
-{ 
+ * @brief  Reports the name of the source file and the source line number
+ *         where the assert_param error has occurred.
+ * @param  file: pointer to the source file name
+ * @param  line: assert_param error line source number
+ * @retval None
+ */
+void assert_failed(uint8_t *file, uint32_t line)
+{
   /* User can add his own implementation to report the file name and line number,
      ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
 
@@ -368,5 +391,3 @@ void assert_failed(uint8_t* file, uint32_t line)
   }
 }
 #endif
-
-
