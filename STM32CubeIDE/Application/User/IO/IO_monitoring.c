@@ -12,47 +12,53 @@
 
 
 uint8_t isLaunchStarted = 0;
-
 extern MissionManager misManager;
 
 uint8_t luanch(uint8_t maoz){
 
-	uint8_t launch_status = 0;
-// TODO replace status with enum and each state should indicate on the exit error stage
+//	LaunchError err = 0;
+// TODO after defining error handling in this seq implement it
 	elev_up(maoz);
 
 	uint32_t start = HAL_GetTick();
 	while (HAL_GetTick() - start < ELEV_TIMEOUT){
 		if (!is_maoz_mid(maoz) && is_maoz_up(maoz)){
-			launch_status = 1;
 			break;
 		}
 	}
 
-	if (launch_status){
-		sys_msleep(ELEV_ACTION_WAIT);
-		elev_down(maoz);
-	}
+	sys_msleep(ELEV_ACTION_WAIT);
+	elev_down(maoz);
 
 	start = HAL_GetTick();
 	while (HAL_GetTick() - start < ELEV_TIMEOUT){
-		if (!is_maoz_mid(maoz) && is_maoz_up(maoz)){
-			launch_status = 1;
+		if (!is_maoz_up(maoz)){
 			break;
 		}
 	}
 
-	return false;
+	if (is_maoz_up(maoz)){
+		// TODO: send status including Dx-3
+	}
+
+	return 0;
 }
 
 void launchSequence(void *args){
-
+	LaunchError err = NoError;
 	while(1){
 		for (int i = 0; i < MAX_MISSIONS; ++i){
+			err = 0;
+			if (misManager.missions[i].completed) continue;
 			if (misManager.missions[i].assigned){
-				luanch(misManager.missions[i].assigned_to);
+				err = luanch(misManager.missions[i].assigned_to);
+				if (!err){
+					misManager.missions[i].completed = true;
+				}
+				// TODO: handle launch errors
 			}
 		}
+		sys_msleep(2);
 	}
 }
 

@@ -85,9 +85,12 @@ int main(void)
   MX_USART2_UART_Init();
 #endif
 
-  I2C_Init();
-
   GPIO_Config();
+
+  while(!is_power_on());
+  power_on_realy();
+
+  I2C_Init();
 
   /* Init thread */
   osThreadDef(Start, StartThread, osPriorityNormal, 0, configMINIMAL_STACK_SIZE * 4);

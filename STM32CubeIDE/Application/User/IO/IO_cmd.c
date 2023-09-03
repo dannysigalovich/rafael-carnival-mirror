@@ -72,3 +72,11 @@ uint8_t is_maoz_down(uint8_t maoz_num){
 	}
 }
 
+uint8_t is_power_on(){
+	return !HAL_GPIO_ReadPin(POWER_ON_GPIO_GROUP, POWER_ON_IN_GPIO_PIN);
+}
+
+void power_on_realy(){
+	HAL_GPIO_WritePin(POWER_ON_GPIO_GROUP, POWER_ON_OUT_GPIO_PIN, 1);
+}
+
