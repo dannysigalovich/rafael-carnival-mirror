@@ -14,7 +14,7 @@
 uint8_t isLaunchStarted = 0;
 extern MissionManager misManager;
 
-uint8_t luanch(uint8_t maoz){
+uint8_t launch(uint8_t maoz){
 
 //	LaunchError err = 0;
 // TODO after defining error handling in this seq implement it
@@ -51,7 +51,7 @@ void launchSequence(void *args){
 			err = 0;
 			if (misManager.missions[i].completed) continue;
 			if (misManager.missions[i].assigned){
-				err = luanch(misManager.missions[i].assigned_to);
+				err = launch(misManager.missions[i].assigned_to);
 				if (!err){
 					misManager.missions[i].completed = true;
 				}
@@ -62,8 +62,26 @@ void launchSequence(void *args){
 	}
 }
 
+uint8_t up, mid, down;
+
+void check_disc(){
+	while (1){
+			up = is_maoz_up(2);
+			down = is_maoz_down(2);
+			mid = is_maoz_mid(2);
+	}
+}
+
+void check_up_down_with_leds(){
+	while (1){
+		elev_up(2);
+		elev_down(2);
+	}
+}
 
 void startLaunchSequence(){
+//	check_disc();
+//	check_up_down_with_leds();
 	sys_thread_new("luanchSeq", launchSequence, NULL, DEFAULT_THREAD_STACKSIZE, LAUNCH_SEQ_THREAD_PRIO);
 }
 
