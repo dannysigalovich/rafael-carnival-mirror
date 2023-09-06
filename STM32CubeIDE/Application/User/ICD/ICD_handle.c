@@ -101,10 +101,12 @@ void buildLaunchCmd(LaunchCmd *cmd){
 		// build real launch command
 		TaskHandle_t currHandle = xTaskGetCurrentTaskHandle();
 		cmd->missionId = missionAssigned(&misManager, getMauzNumber(currHandle));
+		cmd->secureLaunch = SECURE_LAUNCH;
 	}
 	else{
 	 // build fake launch command (fill with zero or something similar)
 		cmd->missionId = 0;
+		cmd->secureLaunch = 0;
 	}
 	cmd->cs = 1;
 }

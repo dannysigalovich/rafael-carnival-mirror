@@ -13,6 +13,7 @@
 #define MAX_WORDS 2
 #define MAX_SECRET_SIZE 16
 #define MISSIONS_HEADER_SIZE 5
+#define SECURE_LAUNCH 135
 
 #define PACKED __attribute__((packed, aligned(1)))
 
@@ -87,6 +88,7 @@ typedef struct PACKED LaunchCmd{
     unsigned char msgType; // according to MessageTypeEnum
     unsigned char msgId;   // Incremental
     unsigned short missionId;
+    unsigned char secureLaunch;
     unsigned char cs;
 } LaunchCmd;
 
