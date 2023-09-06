@@ -87,8 +87,9 @@ int main(void)
 
   GPIO_Config();
 
-  while(!is_power_on());
-  power_on_realy();
+//  while(!is_power_on());
+//  power_on_realy();
+
 
   I2C_Init();
 
@@ -136,9 +137,9 @@ static void StartThread(void const *argument)
  */
 static void BSP_Config(void)
 {
-  BSP_LED_Init(LED1);
+/*  BSP_LED_Init(LED1);
   BSP_LED_Init(LED2);
-  BSP_LED_Init(LED3);
+  BSP_LED_Init(LED3); */
 }
 
 /**

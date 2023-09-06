@@ -64,24 +64,27 @@ void launchSequence(void *args){
 
 uint8_t up, mid, down;
 
-void check_disc(){
+void check_disc(uint8_t maoz){
 	while (1){
-			up = is_maoz_up(2);
-			down = is_maoz_down(2);
-			mid = is_maoz_mid(2);
+			up = is_maoz_up(maoz);
+			down = is_maoz_down(maoz);
+			mid = is_maoz_mid(maoz);
 	}
 }
 
-void check_up_down_with_leds(){
+void check_up_down_with_leds(uint8_t maoz){
 	while (1){
-		elev_up(2);
-		elev_down(2);
+		elev_up(maoz);
+		elev_down(maoz);
 	}
 }
 
 void startLaunchSequence(){
-//	check_disc();
-//	check_up_down_with_leds();
+/*############## TESTS ##############*/
+//	check_disc(2);
+//	check_up_down_with_leds(2);
+/*###################################*/
+
 	sys_thread_new("luanchSeq", launchSequence, NULL, DEFAULT_THREAD_STACKSIZE, LAUNCH_SEQ_THREAD_PRIO);
 }
 

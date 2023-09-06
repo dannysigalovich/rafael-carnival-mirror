@@ -61,13 +61,13 @@ void elev_down(uint8_t maoz_num){
 uint8_t is_maoz_up(uint8_t maoz_num){
 	switch (maoz_num){
 	case 1:
-		return !HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_3);
+		return !HAL_GPIO_ReadPin(MAOZ1_DISC_GPIO_GROUP, MAOZ1_DISC_UP_PIN);
 	case 2:
-		return !HAL_GPIO_ReadPin(GPIOA, DISC_UP_GPIO_PIN);
+		return !HAL_GPIO_ReadPin(MAOZ2_UM_DISC_GPIO_GROUP, MAOZ2_DISC_UP_PIN);
 	case 3:
-		return !HAL_GPIO_ReadPin(GPIOG, GPIO_PIN_4);
+		return !HAL_GPIO_ReadPin(MAOZ3_DISC_GPIO_GROUP, MAOZ3_DISC_UP_PIN);
 	case 4:
-		return !HAL_GPIO_ReadPin(GPIOD, GPIO_PIN_11);
+		return !HAL_GPIO_ReadPin(MAOZ4_DISC_GPIO_GROUP, MAOZ4_DISC_UP_PIN);
 	default:
 		return 0;
 	}
@@ -76,13 +76,13 @@ uint8_t is_maoz_up(uint8_t maoz_num){
 uint8_t is_maoz_mid(uint8_t maoz_num){
 	switch (maoz_num){
 	case 1:
-		return !HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_4);
+		return !HAL_GPIO_ReadPin(MAOZ1_DISC_GPIO_GROUP, MAOZ1_DISC_MID_PIN);
 	case 2:
-		return !HAL_GPIO_ReadPin(GPIOA, DISC_MID_GPIO_PIN);
+		return !HAL_GPIO_ReadPin(MAOZ2_UM_DISC_GPIO_GROUP, MAOZ2_DISC_MID_PIN);
 	case 3:
-		return !HAL_GPIO_ReadPin(GPIOG, GPIO_PIN_5);
+		return !HAL_GPIO_ReadPin(MAOZ3_DISC_GPIO_GROUP, MAOZ3_DISC_MID_PIN);
 	case 4:
-		return !HAL_GPIO_ReadPin(GPIOD, GPIO_PIN_12);
+		return !HAL_GPIO_ReadPin(MAOZ4_DISC_GPIO_GROUP, MAOZ4_DISC_MID_PIN);
 	default:
 		return 0;
 	}
@@ -91,13 +91,13 @@ uint8_t is_maoz_mid(uint8_t maoz_num){
 uint8_t is_maoz_down(uint8_t maoz_num){
 	switch (maoz_num){
 	case 1:
-		return !HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_5);
+		return !HAL_GPIO_ReadPin(MAOZ1_DISC_GPIO_GROUP, MAOZ1_DISC_DOWN_PIN);
 	case 2:
-		return !HAL_GPIO_ReadPin(GPIOC, DISC_DOWN_GPIO_PIN);
+		return !HAL_GPIO_ReadPin(MAOZ2_DOWN_DISC_GPIO_GROUP, MAOZ2_DISC_DOWN_PIN);
 	case 3:
-		return !HAL_GPIO_ReadPin(GPIOG, GPIO_PIN_6);
+		return !HAL_GPIO_ReadPin(MAOZ3_DISC_GPIO_GROUP, MAOZ3_DISC_DOWN_PIN);
 	case 4:
-		return !HAL_GPIO_ReadPin(GPIOD, GPIO_PIN_13);
+		return !HAL_GPIO_ReadPin(MAOZ4_DISC_GPIO_GROUP, MAOZ4_DISC_DOWN_PIN);
 	default:
 			return 0;
 	}
