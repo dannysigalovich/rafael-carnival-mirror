@@ -36,6 +36,8 @@ uint8_t msgId = 0; // get increment every time we send something
 
 extern CircularBuffer INSPVAXBuff;
 
+extern bool elevIsUp[MAX_MAOZ];
+
 enum FlowState flow = Recv;
 
 
@@ -97,11 +99,19 @@ void buildLaunchCmd(LaunchCmd *cmd){
 	cmd->msgType = LaunchCmdEnum;
 	cmd->msgId = msgId++;
 
-	if (currStatus.isReadyToLaunch && isLaunchSwitchOn()){
+	uint8_t maoz_num = getMauzNumber(xTaskGetCurrentTaskHandle());
+
+	_Bool part_decision = currStatus.isReadyToLaunch && isLaunchSwitchOn();
+	_Bool decision = part_decision && elevIsUp[maoz_num];
+
+	if (!decision && part_decision){
+		missionAssigned(&misManager, maoz_num);
+	}
+
+	if (decision){
 		// build real launch command
-		TaskHandle_t currHandle = xTaskGetCurrentTaskHandle();
-		cmd->missionId = missionAssigned(&misManager, getMauzNumber(currHandle));
-		cmd->secureLaunch = SECURE_LAUNCH;
+		cmd->missionId = missionAssigned(&misManager, maoz_num);
+		cmd->secureLaunch = cmd->missionId == 0 ? 0 : SECURE_LAUNCH;
 	}
 	else{
 	 // build fake launch command (fill with zero or something similar)

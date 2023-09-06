@@ -14,6 +14,9 @@
     HAL_GPIO_WritePin(GPIO_GROUP, PIN, 0); \
 } while (0)
 
+
+uint8_t isLaunchStarted = 0;
+
 void elev_up(uint8_t maoz_num){
 
 	HAL_GPIO_WritePin(ELEV_SAFE_GPIO_GROUP, ELEV_SAFE_GPIO_PIN, 1);
@@ -109,5 +112,17 @@ uint8_t is_power_on(){
 
 void power_on_realy(){
 	HAL_GPIO_WritePin(POWER_ON_GPIO_GROUP, POWER_ON_OUT_GPIO_PIN, 1);
+}
+
+
+uint8_t isLaunchSwitchOn(){
+	return isLaunchStarted;
+}
+
+
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
+  if (GPIO_Pin == LAUNCH_GPIO_PIN){
+	  isLaunchStarted = 1;
+  }
 }
 
