@@ -11,7 +11,7 @@
 #include "missionManager/missionManager.h"
 
 
-uint8_t isLaunchStarted = 0;
+bool elevIsUp[MAX_MAOZ] = {0};
 extern MissionManager misManager;
 
 uint8_t launch(uint8_t maoz){
@@ -27,7 +27,9 @@ uint8_t launch(uint8_t maoz){
 		}
 	}
 
+	elevIsUp[maoz] = true;
 	sys_msleep(ELEV_ACTION_WAIT);
+	elevIsUp[maoz] = false;
 	elev_down(maoz);
 
 	start = HAL_GetTick();
@@ -64,7 +66,7 @@ void launchSequence(void *args){
 
 uint8_t up, mid, down;
 
-void check_disc(uint8_t maoz){
+void check_disc_with_buttons(uint8_t maoz){
 	while (1){
 			up = is_maoz_up(maoz);
 			down = is_maoz_down(maoz);
@@ -81,20 +83,9 @@ void check_up_down_with_leds(uint8_t maoz){
 
 void startLaunchSequence(){
 /*############## TESTS ##############*/
-//	check_disc(2);
+//	check_disc_with_buttons(2);
 //	check_up_down_with_leds(2);
 /*###################################*/
 
 	sys_thread_new("luanchSeq", launchSequence, NULL, DEFAULT_THREAD_STACKSIZE, LAUNCH_SEQ_THREAD_PRIO);
-}
-
-uint8_t isLaunchSwitchOn(){
-	return isLaunchStarted;
-}
-
-
-void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
-  if (GPIO_Pin == LAUNCH_GPIO_PIN){
-	  isLaunchStarted = 1;
-  }
 }
