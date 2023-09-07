@@ -47,7 +47,7 @@ void I2C_Init(){
 
 
 void I2C_start_listen(){
-	sys_thread_new("I2C_mauz2", ICD_handle, NULL, DEFAULT_THREAD_STACKSIZE, I2C_HANDLE_THREAD_PRIO);
+	sys_thread_new("I2C_spike2", ICD_handle, NULL, DEFAULT_THREAD_STACKSIZE, I2C_HANDLE_THREAD_PRIO);
 }
 
 

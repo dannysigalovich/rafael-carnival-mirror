@@ -11,35 +11,35 @@
 #include "missionManager/missionManager.h"
 
 
-bool elevIsUp[MAX_MAOZ] = {0};
+bool elevIsUp[MAX_SPIKE] = {0};
 extern MissionManager misManager;
 
-uint8_t launch(uint8_t maoz){
+uint8_t launch(uint8_t spike){
 
 //	LaunchError err = 0;
 // TODO after defining error handling in this seq implement it
-	elev_up(maoz);
+	elev_up(spike);
 
 	uint32_t start = HAL_GetTick();
 	while (HAL_GetTick() - start < ELEV_TIMEOUT){
-		if (!is_maoz_mid(maoz) && is_maoz_up(maoz)){
+		if (!is_spike_mid(spike) && is_spike_up(spike)){
 			break;
 		}
 	}
 
-	elevIsUp[maoz] = true;
+	elevIsUp[spike] = true;
 	sys_msleep(ELEV_ACTION_WAIT);
-	elevIsUp[maoz] = false;
-	elev_down(maoz);
+	elevIsUp[spike] = false;
+	elev_down(spike);
 
 	start = HAL_GetTick();
 	while (HAL_GetTick() - start < ELEV_TIMEOUT){
-		if (!is_maoz_up(maoz)){
+		if (!is_spike_up(spike)){
 			break;
 		}
 	}
 
-	if (is_maoz_up(maoz)){
+	if (is_spike_up(spike)){
 		// TODO: send status including Dx-3
 	}
 
@@ -66,18 +66,18 @@ void launchSequence(void *args){
 
 uint8_t up, mid, down;
 
-void check_disc_with_buttons(uint8_t maoz){
+void check_disc_with_buttons(uint8_t spike){
 	while (1){
-			up = is_maoz_up(maoz);
-			down = is_maoz_down(maoz);
-			mid = is_maoz_mid(maoz);
+			up = is_spike_up(spike);
+			down = is_spike_down(spike);
+			mid = is_spike_mid(spike);
 	}
 }
 
-void check_up_down_with_leds(uint8_t maoz){
+void check_up_down_with_leds(uint8_t spike){
 	while (1){
-		elev_up(maoz);
-		elev_down(maoz);
+		elev_up(spike);
+		elev_down(spike);
 	}
 }
 

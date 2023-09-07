@@ -25,7 +25,7 @@ uint8_t currTransmitSize = 0;
 /* Buffer used for reception */
 extern uint8_t aRxBuffer[RXBUFFERSIZE];
 
-/* the current status of mauz updated every 100ms */
+/* the current status of spike updated every 100ms */
 FireFlyStatus currStatus;
 
 /* missions and secret words got from  */
@@ -36,7 +36,7 @@ uint8_t msgId = 0; // get increment every time we send something
 
 extern CircularBuffer INSPVAXBuff;
 
-extern bool elevIsUp[MAX_MAOZ];
+extern bool elevIsUp[MAX_SPIKE];
 
 enum FlowState flow = Recv;
 
@@ -99,18 +99,18 @@ void buildLaunchCmd(LaunchCmd *cmd){
 	cmd->msgType = LaunchCmdEnum;
 	cmd->msgId = msgId++;
 
-	uint8_t maoz_num = getMauzNumber(xTaskGetCurrentTaskHandle());
+	uint8_t spike_num = getMauzNumber(xTaskGetCurrentTaskHandle());
 
 	_Bool part_decision = currStatus.isReadyToLaunch && isLaunchSwitchOn();
-	_Bool decision = part_decision && elevIsUp[maoz_num];
+	_Bool decision = part_decision && elevIsUp[spike_num];
 
 	if (!decision && part_decision){
-		missionAssigned(&misManager, maoz_num);
+		missionAssigned(&misManager, spike_num);
 	}
 
 	if (decision){
 		// build real launch command
-		cmd->missionId = missionAssigned(&misManager, maoz_num);
+		cmd->missionId = missionAssigned(&misManager, spike_num);
 		cmd->secureLaunch = cmd->missionId == 0 ? 0 : SECURE_LAUNCH;
 	}
 	else{
