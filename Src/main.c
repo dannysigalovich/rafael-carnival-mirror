@@ -360,13 +360,13 @@ void Error_Handler(void)
 }
 
 /* This function taking a taskHandle and returning the spike number (0 - 3) which the handler is taking care of*/
-int getMauzNumber(TaskHandle_t handle){
+int getSpikeNumber(TaskHandle_t handle){
 	char *taskName = pcTaskGetName(handle);
 	if (taskName == NULL) return -1;
 
-	size_t spikeOffset = strlen(taskName) - 5;
+	size_t spikeOffset = strlen(taskName) - strlen("spikeX");
 
-	if (!strncmp(taskName + spikeOffset, "spike", 4)){
+	if (!strncmp(taskName + spikeOffset, "spike", strlen("spike"))){
 		return *(taskName + strlen(taskName) - 1) - '0';
 	}
 	return -1;

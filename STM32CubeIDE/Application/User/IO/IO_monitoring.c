@@ -9,10 +9,10 @@
 #include "lwip/api.h"
 #include "lwip/apps/fs.h"
 #include "missionManager/missionManager.h"
+#include "I2C/i2c_config.h"
 
-
-bool elevIsUp[MAX_SPIKE] = {0};
 extern MissionManager misManager;
+extern SpikeTaskData spikeData[MAX_SPIKES];
 
 uint8_t launch(uint8_t spike){
 
@@ -27,9 +27,9 @@ uint8_t launch(uint8_t spike){
 		}
 	}
 
-	elevIsUp[spike] = true;
+	spikeData[spike].elevIsUp = true;
 	sys_msleep(ELEV_ACTION_WAIT);
-	elevIsUp[spike] = false;
+	spikeData[spike].elevIsUp = false;
 	elev_down(spike);
 
 	start = HAL_GetTick();

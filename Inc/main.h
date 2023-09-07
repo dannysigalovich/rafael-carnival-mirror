@@ -58,7 +58,7 @@
 /* Exported macro ------------------------------------------------------------*/
 /* Exported functions ------------------------------------------------------- */
 void Error_Handler(void);
-int getMauzNumber(TaskHandle_t handle);
+int getSpikeNumber(TaskHandle_t handle);
 
 #ifdef __cplusplus
 }
