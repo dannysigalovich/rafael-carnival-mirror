@@ -21,7 +21,6 @@ extern char secret_words[2][MAX_SECRET_SIZE];
 extern CircularBuffer INSPVAXBuff;
 extern SpikeTaskData spikeData[MAX_SPIKES];
 
-
 void convertINSPVAXToNavFrameINS(INSPVAX *inspvax, NavFrameINS *navFrame) {
     navFrame->weeknumber = inspvax->header.week;
     navFrame->mSec = inspvax->header.ms;

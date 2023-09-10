@@ -23,7 +23,7 @@ void setMissions(MissionManager* manager, Mission* missions) {
 		manager->missions[i].priority = missions[i].priority;
         manager->missions[i].assigned = false;
         manager->missions[i].completed = false;
-        manager->missions[i].assigned_to = 0;
+        manager->missions[i].assigned_to = -1;
         // the mutex is init once in initializeMissionManager
 	}
 	manager->missionsSets = true;
@@ -31,53 +31,68 @@ void setMissions(MissionManager* manager, Mission* missions) {
     sys_mutex_unlock(&(manager->mutex));
 }
 
+/* returns the index of the mission assigned to the given peopleNum, or -1 if none */
 int findAssignedMission(MissionManager* manager, uint8_t peopleNum){
 	for (int i = 0; i < MAX_MISSIONS; ++i) {
 		if (manager->missions[i].assigned && manager->missions[i].assigned_to == peopleNum){
-			return manager->missions[i].mission_number;
+			return i;
 		}
 	}
-	return 0;
+	return -1;
 }
 
-// people here is meant for spike
+/* returns the mission number assigned to the given peopleNum, or 0 if none 
+   it will assign a new mission if there is a higher priority mission than the one assigned to the spike
+*/
 unsigned short missionAssigned(MissionManager* manager, uint8_t peopleNum) {
 	if (!manager->missionsSets) return 0; // in case we didnt get missions yet
 
-	int selectedMission = findAssignedMission(manager, peopleNum);
-	// if the people already assigned with a mission and ask again return the same mission
-    if (selectedMission) return selectedMission;
+    int highestMissionIndex = -1, highestPriority = -1, oldMissionIndex = -1;
+
+	oldMissionIndex = findAssignedMission(manager, peopleNum);
 
     sys_mutex_lock(&(manager->mutex));
 
-    int highestPriority = 0;
-
+    // find the highest priority mission that is not assigned to anyone
     for (int i = 0; i < MAX_MISSIONS; ++i) {
         if (!manager->missions[i].assigned && manager->missions[i].priority > highestPriority) {
-            selectedMission = i;
+            highestMissionIndex = i;
             highestPriority = manager->missions[i].priority;
         }
     }
 
-    if (selectedMission != -1) {
-        manager->missions[selectedMission].assigned = true;
-        manager->missions[selectedMission].assigned_to = peopleNum;
+    // if there is a higher priority mission than the one assigned to the spike, unassign the old one and assign the new one
+    if (highestMissionIndex != -1 && oldMissionIndex != -1
+        && manager->missions[highestMissionIndex].priority > manager->missions[oldMissionIndex].priority) {
+        manager->missions[oldMissionIndex].assigned = false;
+        manager->missions[oldMissionIndex].assigned_to = -1;
+        manager->missions[highestMissionIndex].assigned = true;
+        manager->missions[highestMissionIndex].assigned_to = peopleNum;
+    }
+    // if there is no old mission assigned to the spike, assign the new one
+    else if (highestMissionIndex != -1 && oldMissionIndex == -1) {
+        manager->missions[highestMissionIndex].assigned = true;
+        manager->missions[highestMissionIndex].assigned_to = peopleNum;
+    }
+    else {// if there is no new mission to assign, return the old mission
+        highestMissionIndex = oldMissionIndex;
     }
 
     sys_mutex_unlock(&(manager->mutex));
-    return selectedMission;
+    // the return line is like this in case there is no old mission assigned to the spike and no new mission to assign
+    return highestMissionIndex == -1 ? 0 : manager->missions[highestMissionIndex].mission_number;
 }
 
-void completeInSuccess(MissionManager* manager, int missionNum) {
+void completeInSuccess(MissionManager* manager, int missionIndex) {
     sys_mutex_lock(&(manager->mutex));
-    manager->missions[missionNum].completed = true;
+    manager->missions[missionIndex].completed = true;
     sys_mutex_unlock(&(manager->mutex));
 }
 
-void completeInFailure(MissionManager* manager, int missionNum) {
+void completeInFailure(MissionManager* manager, int missionIndex) {
     sys_mutex_lock(&(manager->mutex));
-    manager->missions[missionNum].completed = false;
-    manager->missions[missionNum].assigned = false;
-    manager->missions[missionNum].assigned_to = 0;
+    manager->missions[missionIndex].completed = false;
+    manager->missions[missionIndex].assigned = false;
+    manager->missions[missionIndex].assigned_to = -1;
     sys_mutex_unlock(&(manager->mutex));
 }

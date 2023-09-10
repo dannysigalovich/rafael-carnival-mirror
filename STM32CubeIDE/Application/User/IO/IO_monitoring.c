@@ -14,17 +14,23 @@
 extern MissionManager misManager;
 extern SpikeTaskData spikeData[MAX_SPIKES];
 
-uint8_t launch(uint8_t spike){
+LaunchError launch(uint8_t spike){
 
-//	LaunchError err = 0;
-// TODO after defining error handling in this seq implement it
+	LaunchError status = ElevStaysDown;
+
 	elev_up(spike);
 
 	uint32_t start = HAL_GetTick();
 	while (HAL_GetTick() - start < ELEV_TIMEOUT){
 		if (!is_spike_mid(spike) && is_spike_up(spike)){
+			status = SpikeNotFreeAndElevUp;
 			break;
 		}
+	}
+
+	if (status == ElevStaysDown){
+		elev_down(spike);
+		return ElevStaysDown;
 	}
 
 	spikeData[spike].elevIsUp = true;
@@ -32,18 +38,14 @@ uint8_t launch(uint8_t spike){
 	spikeData[spike].elevIsUp = false;
 	elev_down(spike);
 
-	start = HAL_GetTick();
-	while (HAL_GetTick() - start < ELEV_TIMEOUT){
-		if (!is_spike_up(spike)){
-			break;
-		}
-	}
 
 	if (is_spike_up(spike)){
-		// TODO: send status including Dx-3
+		return SpikeNotFreeAndElevUp;
 	}
-
-	return 0;
+	if (is_spike_down(spike)){
+		return SpikeNotFreeAndElevDown;
+	}
+	return NoError;
 }
 
 void launchSequence(void *args){
@@ -54,10 +56,18 @@ void launchSequence(void *args){
 			if (misManager.missions[i].completed) continue;
 			if (misManager.missions[i].assigned){
 				err = launch(misManager.missions[i].assigned_to);
-				if (!err){
-					misManager.missions[i].completed = true;
+				if (err == NoError){
+					completeInSuccess(&misManager, i);
 				}
-				// TODO: handle launch errors
+				else if (err == SpikeNotFreeAndElevUp){
+					// when the elevator stays up is a fatal error, we need to stop the launch sequence and wait for manual intervention
+					break;
+				}
+				else if (err == ElevStaysDown || err == SpikeNotFreeAndElevDown){
+					// when the elevator stays down is not a fatal error,
+					// we need to complete the mission in failure for it to be assigned to another spike
+					completeInFailure(&misManager, i);
+				}
 			}
 		}
 		sys_msleep(2);
