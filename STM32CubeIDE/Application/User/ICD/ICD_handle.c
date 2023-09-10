@@ -15,34 +15,12 @@
 #include "Novatel/navMesseging.h"
 #include "missionManager/missionManager.h"
 
-/* I2C handler declaration */
-extern I2C_HandleTypeDef I2cHandle;
-
-/* Buffer used for transmission */
-extern uint8_t aTxBuffer[TXBUFFERSIZE];
-uint8_t currTransmitSize = 0;
-
-/* Buffer used for reception */
-extern uint8_t aRxBuffer[RXBUFFERSIZE];
-
-/* the current status of mauz updated every 100ms */
-FireFlyStatus currStatus;
-
 /* missions and secret words got from  */
 extern MissionManager misManager;
 extern char secret_words[2][MAX_SECRET_SIZE];
-
-uint8_t msgId = 0; // get increment every time we send something
-
 extern CircularBuffer INSPVAXBuff;
+extern SpikeTaskData spikeData[MAX_SPIKES];
 
-extern bool elevIsUp[MAX_MAOZ];
-
-enum FlowState flow = Recv;
-
-
-void HAL_I2C_SlaveRxCpltCallback(I2C_HandleTypeDef *hi2c){flow = Process;}
-void HAL_I2C_SlaveTxCpltCallback(I2C_HandleTypeDef *hi2c){flow = Recv;}
 
 void convertINSPVAXToNavFrameINS(INSPVAX *inspvax, NavFrameINS *navFrame) {
     navFrame->weeknumber = inspvax->header.week;
@@ -79,7 +57,6 @@ void buildINSFrame(NavFrameINS *frame){
 	readINSPVAX(&INSPVAXBuff, &inspvax);
 
 	frame->msgType = NavInsEnum;
-	frame->msgId = msgId++;
 
 	convertINSPVAXToNavFrameINS(&inspvax, frame); // check how the real convert works
 }
@@ -89,7 +66,6 @@ void buildINSSTDFrame(NavFrameINSSTD *frame){
 	readINSPVAX(&INSPVAXBuff, &inspvax);
 
 	frame->msgType = InsStdEnum;
-	frame->msgId = msgId++;
 
 	convertINSPVAXToNavFrameINSSTD(&inspvax, frame);
 }
@@ -97,20 +73,19 @@ void buildINSSTDFrame(NavFrameINSSTD *frame){
 void buildLaunchCmd(LaunchCmd *cmd){
 
 	cmd->msgType = LaunchCmdEnum;
-	cmd->msgId = msgId++;
 
-	uint8_t maoz_num = getMauzNumber(xTaskGetCurrentTaskHandle());
+	uint8_t spike_num = getSpikeNumber(xTaskGetCurrentTaskHandle());
 
-	_Bool part_decision = currStatus.isReadyToLaunch && isLaunchSwitchOn();
-	_Bool decision = part_decision && elevIsUp[maoz_num];
+	_Bool part_decision = spikeData[spike_num].currStatus.isReadyToLaunch && isLaunchSwitchOn();
+	_Bool decision = part_decision && spikeData[spike_num].elevIsUp;
 
 	if (!decision && part_decision){
-		missionAssigned(&misManager, maoz_num);
+		missionAssigned(&misManager, spike_num);
 	}
 
 	if (decision){
 		// build real launch command
-		cmd->missionId = missionAssigned(&misManager, maoz_num);
+		cmd->missionId = missionAssigned(&misManager, spike_num);
 		cmd->secureLaunch = cmd->missionId == 0 ? 0 : SECURE_LAUNCH;
 	}
 	else{
@@ -129,67 +104,60 @@ void buildSecretCmd(SecretCmd *secret){
 }
 
 
-void handle_request(RequestMessage *req){
-
+void handle_request(SpikeTaskData* spikeData){
+	RequestMessage *req = (RequestMessage *) spikeData->aRxBuffer;
+	uint8_t *aTxBuffer = spikeData->aTxBuffer;
+	
 	switch (req->requestedType){
 
 	case NavInsEnum:
 		NavFrameINS PVAFrame;
 		buildINSFrame(&PVAFrame);
+		PVAFrame.msgId = spikeData->msgId++;
 		memcpy(aTxBuffer, &PVAFrame, sizeof(PVAFrame));
-		currTransmitSize = sizeof(PVAFrame);
 		break;
 	case LaunchCmdEnum:
 		LaunchCmd cmd = {0};
 		buildLaunchCmd(&cmd);
+		cmd.msgId = spikeData->msgId++;
 		memcpy(aTxBuffer, &cmd, sizeof(cmd));
-		currTransmitSize = sizeof(cmd);
 		break;
 	case InsStdEnum:
 		NavFrameINSSTD STDFrame;
 		buildINSSTDFrame(&STDFrame);
+		STDFrame.msgId = spikeData->msgId++;
 		memcpy(aTxBuffer, &STDFrame, sizeof(STDFrame));
-		currTransmitSize = sizeof(STDFrame);
 		break;
 	case SecretCmdEnum:
 		SecretCmd secret;
 		buildSecretCmd(&secret);
 		memcpy(aTxBuffer, &secret, sizeof(secret));
-		currTransmitSize = sizeof(secret);
 		break;
 	default:
-		char data[100] = {0};
-		data[0] = 2;
-		data[1] = 12; // msnId(H)
-		data[2] = 34; // msnId(L)
-		data[3] = 4;
-		data[4] = 1;
-		data[5] = 255; // CS
-		memcpy(aTxBuffer, data, 100);
-		currTransmitSize = 100;
 		break;
 	}
-	currTransmitSize = req->msgSize;
+	spikeData->currTransmitSize = req->msgSize;
 }
 
 
-void ICD_process(){
-	uint8_t msgType = *aRxBuffer;
+void ICD_process(SpikeTaskData *spikeData){
+
+	uint8_t msgType = *(spikeData->aRxBuffer);
 
 	switch (msgType){
 
 	case RequestEnum:
-		handle_request((RequestMessage *)aRxBuffer);
-		flow = Transmit;
+		handle_request(spikeData);
+		spikeData->flow = Transmit;
 		break;
 
 	case FirFlyStatus:
-		memcpy(&currStatus, aRxBuffer, sizeof(FireFlyStatus));
-		flow = Recv;
+		memcpy(&(spikeData->currStatus), spikeData->aRxBuffer, sizeof(FireFlyStatus));
+		spikeData->flow = Recv;
 		break;
 
 	default:
-		flow = Recv; // in case of us not recognize the msg we return to recv state
+		spikeData->flow = Recv; // in case of us not recognize the msg we return to recv state
 		break;
 	}
 }
@@ -197,29 +165,29 @@ void ICD_process(){
 
 void ICD_handle(void *args){
 
-	currStatus.BITStatus = 1; // in order to not launch immediately
+	SpikeTaskData *spikeData = (SpikeTaskData *)args;
 
 	while(1){
 
-		switch (flow){
+		switch (spikeData->flow){
 
 		case Recv:
 			/*Put I2C peripheral in reception process ###########################*/
-			if(HAL_I2C_Slave_Receive_IT(&I2cHandle, (uint8_t *)aRxBuffer, RXBUFFERSIZE) != HAL_OK){ // size set to RXBUFFERSIZE and will change later by the driver
+			if(HAL_I2C_Slave_Receive_IT(&(spikeData->I2cHandle), spikeData->aRxBuffer, RXBUFFERSIZE) != HAL_OK){ // size set to RXBUFFERSIZE and will change later by the driver
 				/* Transfer error in reception process */
 				Error_Handler();
 			}
 		    break;
 
 		case Process:
-			ICD_process();
+			ICD_process(spikeData);
 			break;
 
 		case Transmit:
 			/*Start the transmission process #####################################*/
 			/* While the I2C in reception process, user can transmit data through
 			 "aTxBuffer" buffer */
-			if(HAL_I2C_Slave_Transmit_IT(&I2cHandle, (uint8_t*)aTxBuffer, currTransmitSize) != HAL_OK)	{
+			if(HAL_I2C_Slave_Transmit_IT(&(spikeData->I2cHandle), spikeData->aTxBuffer, spikeData->currTransmitSize) != HAL_OK)	{
 				/* Transfer error in transmission process */
 				Error_Handler();
 			}
@@ -236,7 +204,7 @@ void ICD_handle(void *args){
 		  For simplicity reasons, this example is just waiting till the end of the
 		  transfer, but application may perform other tasks while transfer operation
 		  is ongoing. */
-		while (HAL_I2C_GetState(&I2cHandle) != HAL_I2C_STATE_READY){
+		while (HAL_I2C_GetState(&(spikeData->I2cHandle)) != HAL_I2C_STATE_READY){
 			sys_msleep(1); /* for the cpu to not poll */
 		}
 	}

@@ -40,7 +40,7 @@ int findAssignedMission(MissionManager* manager, uint8_t peopleNum){
 	return 0;
 }
 
-// people here is meant for maoz
+// people here is meant for spike
 unsigned short missionAssigned(MissionManager* manager, uint8_t peopleNum) {
 	if (!manager->missionsSets) return 0; // in case we didnt get missions yet
 

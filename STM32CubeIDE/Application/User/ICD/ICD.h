@@ -8,7 +8,6 @@
 #ifndef APPLICATION_USER_ICD_ICD_H_
 #define APPLICATION_USER_ICD_ICD_H_
 
-#include "I2C/i2c_config.h"
 
 #define MAX_WORDS 2
 #define MAX_SECRET_SIZE 16
@@ -18,14 +17,12 @@
 #define PACKED __attribute__((packed, aligned(1)))
 
 void ICD_handle(void *args);
-void HAL_I2C_SlaveRxCpltCallback(I2C_HandleTypeDef *hi2c);
-void HAL_I2C_SlaveTxCpltCallback(I2C_HandleTypeDef *hi2c);
 
-enum FlowState{
+typedef enum FlowState{
 	Recv = 0,
 	Process,
 	Transmit,
-};
+} FlowState;
 
 enum MessageTypeEnum{
 	RequestEnum = 0,

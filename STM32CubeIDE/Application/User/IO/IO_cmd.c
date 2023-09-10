@@ -17,90 +17,90 @@
 
 uint8_t isLaunchStarted = 0;
 
-void elev_up(uint8_t maoz_num){
+void elev_up(uint8_t spike_num){
 
 	HAL_GPIO_WritePin(ELEV_SAFE_GPIO_GROUP, ELEV_SAFE_GPIO_PIN, 1);
 
-	switch(maoz_num){
+	switch(spike_num){
+	case 0:
+		UP_DOWN_PULL_ACTION(SPIKE_1_GPIO_GROUP, SPIKE_1_UP_GPIO_PIN);
+		break;
 	case 1:
-		UP_DOWN_PULL_ACTION(MAOZ_1_GPIO_GROUP, MAOZ_1_UP_GPIO_PIN);
+		UP_DOWN_PULL_ACTION(SPIKE_2_GPIO_GROUP, SPIKE_2_UP_GPIO_PIN);
 		break;
 	case 2:
-		UP_DOWN_PULL_ACTION(MAOZ_2_GPIO_GROUP, MAOZ_2_UP_GPIO_PIN);
+		UP_DOWN_PULL_ACTION(SPIKE_3_GPIO_GROUP, SPIKE_3_UP_GPIO_PIN);
 		break;
 	case 3:
-		UP_DOWN_PULL_ACTION(MAOZ_3_GPIO_GROUP, MAOZ_3_UP_GPIO_PIN);
-		break;
-	case 4:
-		UP_DOWN_PULL_ACTION(MAOZ_4_GPIO_GROUP, MAOZ_4_UP_GPIO_PIN);
+		UP_DOWN_PULL_ACTION(SPIKE_4_GPIO_GROUP, SPIKE_4_UP_GPIO_PIN);
 		break;
 	}
 
 	HAL_GPIO_WritePin(ELEV_SAFE_GPIO_GROUP, ELEV_SAFE_GPIO_PIN, 0);
 }
 
-void elev_down(uint8_t maoz_num){
+void elev_down(uint8_t spike_num){
 
 	HAL_GPIO_WritePin(ELEV_SAFE_GPIO_GROUP, ELEV_SAFE_GPIO_PIN, 1);
 
-	switch(maoz_num){
+	switch(spike_num){
+	case 0:
+		UP_DOWN_PULL_ACTION(SPIKE_1_GPIO_GROUP, SPIKE_1_DOWN_GPIO_PIN);
+		break;
 	case 1:
-		UP_DOWN_PULL_ACTION(MAOZ_1_GPIO_GROUP, MAOZ_1_DOWN_GPIO_PIN);
+		UP_DOWN_PULL_ACTION(SPIKE_2_GPIO_GROUP, SPIKE_2_DOWN_GPIO_PIN);
 		break;
 	case 2:
-		UP_DOWN_PULL_ACTION(MAOZ_2_GPIO_GROUP, MAOZ_2_DOWN_GPIO_PIN);
+		UP_DOWN_PULL_ACTION(SPIKE_3_GPIO_GROUP, SPIKE_3_DOWN_GPIO_PIN);
 		break;
 	case 3:
-		UP_DOWN_PULL_ACTION(MAOZ_3_GPIO_GROUP, MAOZ_3_DOWN_GPIO_PIN);
-		break;
-	case 4:
-		UP_DOWN_PULL_ACTION(MAOZ_4_GPIO_GROUP, MAOZ_4_DOWN_GPIO_PIN);
+		UP_DOWN_PULL_ACTION(SPIKE_4_GPIO_GROUP, SPIKE_4_DOWN_GPIO_PIN);
 		break;
 	}
 
 	HAL_GPIO_WritePin(ELEV_SAFE_GPIO_GROUP, ELEV_SAFE_GPIO_PIN, 0);
 }
 
-uint8_t is_maoz_up(uint8_t maoz_num){
-	switch (maoz_num){
+uint8_t is_spike_up(uint8_t spike_num){
+	switch (spike_num){
+	case 0:
+		return !HAL_GPIO_ReadPin(SPIKE1_DISC_GPIO_GROUP, SPIKE1_DISC_UP_PIN);
 	case 1:
-		return !HAL_GPIO_ReadPin(MAOZ1_DISC_GPIO_GROUP, MAOZ1_DISC_UP_PIN);
+		return !HAL_GPIO_ReadPin(SPIKE2_UM_DISC_GPIO_GROUP, SPIKE2_DISC_UP_PIN);
 	case 2:
-		return !HAL_GPIO_ReadPin(MAOZ2_UM_DISC_GPIO_GROUP, MAOZ2_DISC_UP_PIN);
+		return !HAL_GPIO_ReadPin(SPIKE3_DISC_GPIO_GROUP, SPIKE3_DISC_UP_PIN);
 	case 3:
-		return !HAL_GPIO_ReadPin(MAOZ3_DISC_GPIO_GROUP, MAOZ3_DISC_UP_PIN);
-	case 4:
-		return !HAL_GPIO_ReadPin(MAOZ4_DISC_GPIO_GROUP, MAOZ4_DISC_UP_PIN);
+		return !HAL_GPIO_ReadPin(SPIKE4_DISC_GPIO_GROUP, SPIKE4_DISC_UP_PIN);
 	default:
 		return 0;
 	}
 }
 
-uint8_t is_maoz_mid(uint8_t maoz_num){
-	switch (maoz_num){
+uint8_t is_spike_mid(uint8_t spike_num){
+	switch (spike_num){
+	case 0:
+		return !HAL_GPIO_ReadPin(SPIKE1_DISC_GPIO_GROUP, SPIKE1_DISC_MID_PIN);
 	case 1:
-		return !HAL_GPIO_ReadPin(MAOZ1_DISC_GPIO_GROUP, MAOZ1_DISC_MID_PIN);
+		return !HAL_GPIO_ReadPin(SPIKE2_UM_DISC_GPIO_GROUP, SPIKE2_DISC_MID_PIN);
 	case 2:
-		return !HAL_GPIO_ReadPin(MAOZ2_UM_DISC_GPIO_GROUP, MAOZ2_DISC_MID_PIN);
+		return !HAL_GPIO_ReadPin(SPIKE3_DISC_GPIO_GROUP, SPIKE3_DISC_MID_PIN);
 	case 3:
-		return !HAL_GPIO_ReadPin(MAOZ3_DISC_GPIO_GROUP, MAOZ3_DISC_MID_PIN);
-	case 4:
-		return !HAL_GPIO_ReadPin(MAOZ4_DISC_GPIO_GROUP, MAOZ4_DISC_MID_PIN);
+		return !HAL_GPIO_ReadPin(SPIKE4_DISC_GPIO_GROUP, SPIKE4_DISC_MID_PIN);
 	default:
 		return 0;
 	}
 }
 
-uint8_t is_maoz_down(uint8_t maoz_num){
-	switch (maoz_num){
+uint8_t is_spike_down(uint8_t spike_num){
+	switch (spike_num){
+	case 0:
+		return !HAL_GPIO_ReadPin(SPIKE1_DISC_GPIO_GROUP, SPIKE1_DISC_DOWN_PIN);
 	case 1:
-		return !HAL_GPIO_ReadPin(MAOZ1_DISC_GPIO_GROUP, MAOZ1_DISC_DOWN_PIN);
+		return !HAL_GPIO_ReadPin(SPIKE2_DOWN_DISC_GPIO_GROUP, SPIKE2_DISC_DOWN_PIN);
 	case 2:
-		return !HAL_GPIO_ReadPin(MAOZ2_DOWN_DISC_GPIO_GROUP, MAOZ2_DISC_DOWN_PIN);
+		return !HAL_GPIO_ReadPin(SPIKE3_DISC_GPIO_GROUP, SPIKE3_DISC_DOWN_PIN);
 	case 3:
-		return !HAL_GPIO_ReadPin(MAOZ3_DISC_GPIO_GROUP, MAOZ3_DISC_DOWN_PIN);
-	case 4:
-		return !HAL_GPIO_ReadPin(MAOZ4_DISC_GPIO_GROUP, MAOZ4_DISC_DOWN_PIN);
+		return !HAL_GPIO_ReadPin(SPIKE4_DISC_GPIO_GROUP, SPIKE4_DISC_DOWN_PIN);
 	default:
 			return 0;
 	}
