@@ -71,6 +71,7 @@ unsigned short missionAssigned(MissionManager* manager, uint8_t peopleNum) {
     }
     // if there is no old mission assigned to the spike, assign the new one
     else if (highestMissionIndex != -1 && oldMissionIndex == -1) {
+        printf("Spike %d is ready to fly by his status\n", peopleNum);
         manager->missions[highestMissionIndex].assigned = true;
         manager->missions[highestMissionIndex].assigned_to = peopleNum;
     }

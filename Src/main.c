@@ -37,6 +37,8 @@ static void StartThread(void const *argument);
 static void Netif_Config(void);
 static void MPU_Config(void);
 static void CPU_CACHE_Enable(void);
+void printPrompt();
+
 
 /* Private functions ---------------------------------------------------------*/
 
@@ -68,10 +70,12 @@ int main(void)
 
 #ifdef TREGO_DEBUG
   MX_USART2_UART_Init();
+  printPrompt();
 #endif
 
   GPIO_Config();
 
+  printf("Running, power on relay is disabled on this version...\r\n");
 //  while(!is_power_on());
 //  power_on_realy();
 
@@ -356,6 +360,11 @@ int getSpikeNumber(TaskHandle_t handle){
 	}
 	return -1;
 }
+
+void printPrompt() {
+	printf("\r\n\r\n");
+}
+
 
 #ifdef USE_FULL_ASSERT
 
