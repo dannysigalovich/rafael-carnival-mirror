@@ -10,6 +10,7 @@ void initializeMissionManager(MissionManager* manager) {
     for (int i = 0; i < MAX_MISSIONS; ++i) {
         memset(manager->missions, 0, sizeof(manager) * MAX_MISSIONS);
         manager->missionsSets = false;
+        manager->isSpikeFail[i] = false;
     }
 
     sys_mutex_new(&(manager->mutex));
@@ -24,7 +25,6 @@ void setMissions(MissionManager* manager, Mission* missions) {
         manager->missions[i].assigned = false;
         manager->missions[i].completed = false;
         manager->missions[i].assigned_to = -1;
-        // the mutex is init once in initializeMissionManager
 	}
 	manager->missionsSets = true;
 
@@ -45,7 +45,7 @@ int findAssignedMission(MissionManager* manager, uint8_t peopleNum){
    it will assign a new mission if there is a higher priority mission than the one assigned to the spike
 */
 unsigned short missionAssigned(MissionManager* manager, uint8_t peopleNum) {
-	if (!manager->missionsSets) return 0; // in case we didnt get missions yet
+	if (!manager->missionsSets || manager->isSpikeFail[peopleNum]) return 0; // in case we didnt get missions yet
 
     int highestMissionIndex = -1, highestPriority = -1, oldMissionIndex = -1;
 
@@ -91,6 +91,7 @@ void completeInSuccess(MissionManager* manager, int missionIndex) {
 
 void completeInFailure(MissionManager* manager, int missionIndex) {
     sys_mutex_lock(&(manager->mutex));
+    manager->isSpikeFail[manager->missions[missionIndex].assigned_to] = true;
     manager->missions[missionIndex].completed = false;
     manager->missions[missionIndex].assigned = false;
     manager->missions[missionIndex].assigned_to = -1;
