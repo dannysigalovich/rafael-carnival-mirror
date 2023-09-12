@@ -22,7 +22,7 @@ LaunchError launch(uint8_t spike){
 
 	uint32_t start = HAL_GetTick();
 	while (HAL_GetTick() - start < ELEV_TIMEOUT){
-		if (!is_spike_mid(spike) && is_spike_up(spike)){
+		if (is_spike_up(spike)){
 			status = SpikeNotFreeAndElevUp;
 			break;
 		}
@@ -62,9 +62,9 @@ void launchSequence(void *args){
 				misManager.missions[i].mission_number, misManager.missions[i].assigned_to + 1);
 				err = launch(misManager.missions[i].assigned_to);
 				if (err == NoError){
-					completeInSuccess(&misManager, i);
 					printf("Spike %d launched mission %d successfully\r\n",
 					misManager.missions[i].assigned_to + 1, misManager.missions[i].mission_number);
+					completeInSuccess(&misManager, i);
 				}
 				else if (err == SpikeNotFreeAndElevUp){
 					// when the elevator stays up is a fatal error, we need to stop the launch sequence and wait for manual intervention
@@ -75,9 +75,9 @@ void launchSequence(void *args){
 				else if (err == ElevStaysDown || err == SpikeNotFreeAndElevDown){
 					// when the elevator stays down is not a fatal error,
 					// we need to complete the mission in failure for it to be assigned to another spike
-					completeInFailure(&misManager, i);
 					printf("Spike %d launched mission %d in failure, the mission will be assigned to another spike \r\n",
 					misManager.missions[i].assigned_to + 1, misManager.missions[i].mission_number);
+					completeInFailure(&misManager, i);
 				}
 			}
 		}
@@ -104,7 +104,7 @@ void check_up_down_with_leds(uint8_t spike){
 
 void startLaunchSequence(){
 /*############## TESTS ##############*/
-//	check_disc_with_buttons(2);
+	check_disc_with_buttons(1);
 //	check_up_down_with_leds(2);
 /*###################################*/
 
