@@ -104,8 +104,8 @@ void check_up_down_with_leds(uint8_t spike){
 
 void startLaunchSequence(){
 /*############## TESTS ##############*/
-	check_disc_with_buttons(1);
-//	check_up_down_with_leds(2);
+	// check_disc_with_buttons(1);
+	// check_up_down_with_leds(2);
 /*###################################*/
 
 	sys_thread_new("luanchSeq", launchSequence, NULL, DEFAULT_THREAD_STACKSIZE, LAUNCH_SEQ_THREAD_PRIO);
