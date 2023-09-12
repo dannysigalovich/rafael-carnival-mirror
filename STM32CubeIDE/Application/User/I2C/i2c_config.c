@@ -20,7 +20,7 @@ SpikeTaskData spikeData[MAX_SPIKES] = {0};
 void I2Cx_Init(void *I2CInstance, I2C_HandleTypeDef *I2cHandle);
 
 void I2C_start_listen(){
-	sys_thread_new("I2C_spike0", ICD_handle, spikeData, DEFAULT_THREAD_STACKSIZE, I2C_HANDLE_THREAD_PRIO);
+  sys_thread_new("I2C_spike0", ICD_handle, spikeData, DEFAULT_THREAD_STACKSIZE, I2C_HANDLE_THREAD_PRIO);
   sys_thread_new("I2C_spike1", ICD_handle, spikeData + 1, DEFAULT_THREAD_STACKSIZE, I2C_HANDLE_THREAD_PRIO);
   sys_thread_new("I2C_spike2", ICD_handle, spikeData + 2, DEFAULT_THREAD_STACKSIZE, I2C_HANDLE_THREAD_PRIO);
   sys_thread_new("I2C_spike3", ICD_handle, spikeData + 3, DEFAULT_THREAD_STACKSIZE, I2C_HANDLE_THREAD_PRIO);

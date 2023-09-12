@@ -1,22 +1,7 @@
-/**
- ******************************************************************************
- * @file    LwIP/LwIP_HTTP_Server_Netconn_RTOS/Src/main.c
- * @author  MCD Application Team
- * @brief   This sample code implements a http server application based on
- *          Netconn API of LwIP stack and FreeRTOS. This application uses
- *          STM32H7xx the ETH HAL API to transmit and receive data.
- *          The communication is done with a web browser of a remote PC.
- ******************************************************************************
- * @attention
+/*
+ * main.c
  *
- * Copyright (c) 2017 STMicroelectronics.
- * All rights reserved.
- *
- * This software is licensed under terms that can be found in the LICENSE file
- * in the root directory of this software component.
- * If no LICENSE file comes with this software, it is provided AS-IS.
- *
- ******************************************************************************
+ *      Author: eladsez
  */
 
 /* Includes ------------------------------------------------------------------*/
@@ -32,7 +17,7 @@
 #include "udp_util/udp_conf.h"
 #include "lwip/tcpip.h"
 
-// #define TREGO_DEBUG
+#define TREGO_DEBUG
 
 #ifdef TREGO_DEBUG
 #include "uart/uart_config.h"
@@ -52,6 +37,8 @@ static void StartThread(void const *argument);
 static void Netif_Config(void);
 static void MPU_Config(void);
 static void CPU_CACHE_Enable(void);
+void printPrompt();
+
 
 /* Private functions ---------------------------------------------------------*/
 
@@ -83,10 +70,12 @@ int main(void)
 
 #ifdef TREGO_DEBUG
   MX_USART2_UART_Init();
+  printPrompt();
 #endif
 
   GPIO_Config();
 
+  printf("Running, power on relay is disabled on this version...\r\n");
 //  while(!is_power_on());
 //  power_on_realy();
 
@@ -371,6 +360,11 @@ int getSpikeNumber(TaskHandle_t handle){
 	}
 	return -1;
 }
+
+void printPrompt() {
+	printf("\r\n\r\n");
+}
+
 
 #ifdef USE_FULL_ASSERT
 

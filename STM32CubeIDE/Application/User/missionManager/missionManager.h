@@ -28,6 +28,8 @@ typedef struct {
 typedef struct {
     Mission missions[MAX_MISSIONS];
     bool missionsSets;
+    // true if the spike is fail in luanch sequence, false otherwise. for us to know to not send him missions anymore
+    bool isSpikeFail[MAX_SPIKES];
     sys_mutex_t mutex;
 } MissionManager;
 

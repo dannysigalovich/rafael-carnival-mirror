@@ -51,6 +51,8 @@
 #define GW_ADDR2   ((uint8_t)0U)
 #define GW_ADDR3   ((uint8_t)1U)
 
+#define MAX_SPIKES	4
+
 /* Exported macro ------------------------------------------------------------*/
 #define COUNTOF(__BUFFER__)   (sizeof(__BUFFER__) / sizeof(*(__BUFFER__)))
 /* Exported functions ------------------------------------------------------- */

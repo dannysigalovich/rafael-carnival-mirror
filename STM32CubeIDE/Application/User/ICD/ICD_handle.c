@@ -85,6 +85,7 @@ void buildLaunchCmd(LaunchCmd *cmd){
 		// build real launch command
 		cmd->missionId = missionAssigned(&misManager, spike_num);
 		cmd->secureLaunch = cmd->missionId == 0 ? 0 : SECURE_LAUNCH;
+		printf("sending launch command with mission %d to spike %d\n", cmd->missionId, spike_num + 1);
 	}
 	else{
 	 // build fake launch command (fill with zero or something similar)
