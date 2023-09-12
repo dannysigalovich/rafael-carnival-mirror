@@ -15,7 +15,6 @@
 #include "Novatel/navMesseging.h"
 #include "missionManager/missionManager.h"
 
-/* missions and secret words got from  */
 extern MissionManager misManager;
 extern char secret_words[2][MAX_SECRET_SIZE];
 extern CircularBuffer INSPVAXBuff;
@@ -79,7 +78,7 @@ void buildLaunchCmd(LaunchCmd *cmd){
 	_Bool decision = part_decision && spikeData[spike_num].elevIsUp;
 
 	if (!decision && part_decision){
-		missionAssigned(&misManager, spike_num);
+		missionAssigned(&misManager, spike_num); // assign a mission for the launch sequence to start
 	}
 
 	if (decision){
@@ -173,7 +172,6 @@ void ICD_handle(void *args){
 		case Recv:
 			/*Put I2C peripheral in reception process ###########################*/
 			if(HAL_I2C_Slave_Receive_IT(&(spikeData->I2cHandle), spikeData->aRxBuffer, RXBUFFERSIZE) != HAL_OK){ // size set to RXBUFFERSIZE and will change later by the driver
-				/* Transfer error in reception process */
 				Error_Handler();
 			}
 		    break;
@@ -183,26 +181,16 @@ void ICD_handle(void *args){
 			break;
 
 		case Transmit:
-			/*Start the transmission process #####################################*/
-			/* While the I2C in reception process, user can transmit data through
-			 "aTxBuffer" buffer */
-			if(HAL_I2C_Slave_Transmit_IT(&(spikeData->I2cHandle), spikeData->aTxBuffer, spikeData->currTransmitSize) != HAL_OK)	{
-				/* Transfer error in transmission process */
-				Error_Handler();
+			if(HAL_I2C_Slave_Transmit(&(spikeData->I2cHandle), spikeData->aTxBuffer, spikeData->currTransmitSize, 30) != HAL_OK)	{
+//				Error_Handler(); // the handle Error is not good in this case because it can be timeout (then the return code wont be HAL_OK)
 			}
+			spikeData->flow = Recv;
 			break;
 
 		default:
 
 		}
-
-		/*Wait for the end of the transfer ###################################*/
-		/*  Before starting a new communication transfer, you need to check the current
-		  state of the peripheral; if it�s busy you need to wait for the end of current
-		  transfer before starting a new one.
-		  For simplicity reasons, this example is just waiting till the end of the
-		  transfer, but application may perform other tasks while transfer operation
-		  is ongoing. */
+		/* to not go into recv state more than once in a row */
 		while (HAL_I2C_GetState(&(spikeData->I2cHandle)) != HAL_I2C_STATE_READY){
 			sys_msleep(1); /* for the cpu to not poll */
 		}
