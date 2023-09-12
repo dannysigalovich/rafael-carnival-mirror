@@ -138,6 +138,15 @@ void handle_request(SpikeTaskData* spikeData){
 	spikeData->currTransmitSize = req->msgSize;
 }
 
+void save_FireFlyStatus(SpikeTaskData *spikeData){
+
+	if (!spikeData->currStatus.isReadyToLaunch && ((FireFlyStatus *) spikeData->aRxBuffer)->isReadyToLaunch){
+		printf("Spike status is changed to 1\r\n");
+	}
+
+	memcpy(&(spikeData->currStatus), spikeData->aRxBuffer, sizeof(FireFlyStatus));
+}
+
 
 void ICD_process(SpikeTaskData *spikeData){
 
@@ -151,7 +160,7 @@ void ICD_process(SpikeTaskData *spikeData){
 		break;
 
 	case FirFlyStatus:
-		memcpy(&(spikeData->currStatus), spikeData->aRxBuffer, sizeof(FireFlyStatus));
+		save_FireFlyStatus(spikeData);
 		spikeData->flow = Recv;
 		break;
 
