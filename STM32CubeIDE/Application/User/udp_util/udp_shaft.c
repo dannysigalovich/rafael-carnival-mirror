@@ -36,6 +36,21 @@ char secret_words[2][MAX_SECRET_SIZE];
 void udp_receive_callback(void *arg, struct udp_pcb *upcb, struct pbuf *p, const ip_addr_t *addr, u16_t port);
 void udp_shaft_thread(void* arg);
 
+
+void build_dummy_missions(){ // TODO:  remove when needed
+	Mission missions[MAX_MISSIONS];
+
+
+	for (int i = 0; i < MAX_MISSIONS; ++i){
+		missions[i].mission_number = i + 1;
+		missions[i].priority = i + 1;
+	}
+
+
+	setMissions(&misManager, missions);
+}
+
+
 /**
   * @brief  Initialize the udp connection and all the data structures it uses (Also start its thread)
   * @param  none
@@ -48,6 +63,8 @@ void init_udp_broker(){
 
 	memset(secret_words[0], 0, MAX_SECRET_SIZE);
 	memset(secret_words[1], 0, MAX_SECRET_SIZE);
+
+	build_dummy_missions();
 
 	sys_thread_new("udp_connection", udp_shaft_thread, NULL, DEFAULT_THREAD_STACKSIZE, UDP_THREAD_PRIO);
 }

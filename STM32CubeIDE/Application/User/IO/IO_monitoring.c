@@ -39,12 +39,12 @@ LaunchError launch(uint8_t spike){
 	elev_down(spike);
 
 
-	if (is_spike_up(spike)){
-		return SpikeNotFreeAndElevUp;
-	}
-	if (is_spike_down(spike)){
-		return SpikeNotFreeAndElevDown;
-	}
+//	if (is_spike_up(spike)){
+//		return SpikeNotFreeAndElevUp;
+//	}
+//	if (is_spike_down(spike)){
+//		return SpikeNotFreeAndElevDown;
+//	}
 	return NoError;
 }
 
@@ -104,7 +104,7 @@ void check_up_down_with_leds(uint8_t spike){
 
 void startLaunchSequence(){
 /*############## TESTS ##############*/
-	// check_disc_with_buttons(1);
+//	 check_disc_with_buttons(1);
 	// check_up_down_with_leds(2);
 /*###################################*/
 

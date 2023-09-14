@@ -123,6 +123,7 @@ uint8_t isLaunchSwitchOn(){
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
   if (GPIO_Pin == LAUNCH_GPIO_PIN){
 	  isLaunchStarted = 1;
+	  HAL_NVIC_DisableIRQ(EXTI9_5_IRQn);
   }
 }
 

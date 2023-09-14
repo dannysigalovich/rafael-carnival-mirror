@@ -13,8 +13,8 @@
 
 #define LAUNCH_SEQ_THREAD_PRIO	( osPriorityNormal )
 
-#define UP_DOWN_PULL_TIME 1000 /* The time we set the elevator pins to pull up in ms */
-#define ELEV_TIMEOUT 3000  /* The time to wait for the elevator when going up or down until timeout */
+#define UP_DOWN_PULL_TIME 10000 /* The time we set the elevator pins to pull up in ms */
+#define ELEV_TIMEOUT 2000  /* The time to wait for the elevator when going up or down until timeout */
 #define ELEV_ACTION_WAIT 15000 /* time to wait when the elevator is up until we pull the elevator down again (wait x sec in the state machine) */
 #define MAX_SPIKE		 4
 

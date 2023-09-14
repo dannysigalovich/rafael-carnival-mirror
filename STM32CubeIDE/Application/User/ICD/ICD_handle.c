@@ -85,7 +85,7 @@ void buildLaunchCmd(LaunchCmd *cmd){
 		// build real launch command
 		cmd->missionId = missionAssigned(&misManager, spike_num);
 		cmd->secureLaunch = cmd->missionId == 0 ? 0 : SECURE_LAUNCH;
-		printf("sending launch command with mission %d to spike %d\n", cmd->missionId, spike_num + 1);
+		printf("sending launch command with mission %d to spike %d\r\n", cmd->missionId, spike_num + 1);
 	}
 	else{
 	 // build fake launch command (fill with zero or something similar)
@@ -141,7 +141,7 @@ void handle_request(SpikeTaskData* spikeData){
 void save_FireFlyStatus(SpikeTaskData *spikeData){
 
 	if (!spikeData->currStatus.isReadyToLaunch && ((FireFlyStatus *) spikeData->aRxBuffer)->isReadyToLaunch){
-		printf("Spike status is changed to 1\r\n");
+//		printf("Spike status is changed to 1\r\n");
 	}
 
 	memcpy(&(spikeData->currStatus), spikeData->aRxBuffer, sizeof(FireFlyStatus));
@@ -182,7 +182,7 @@ void ICD_handle(void *args){
 		case Recv:
 			/*Put I2C peripheral in reception process ###########################*/
 			if(HAL_I2C_Slave_Receive_IT(&(spikeData->I2cHandle), spikeData->aRxBuffer, RXBUFFERSIZE) != HAL_OK){ // size set to RXBUFFERSIZE and will change later by the driver
-				Error_Handler();
+//				Error_Handler(); // TODO: handle error
 			}
 		    break;
 
@@ -191,7 +191,7 @@ void ICD_handle(void *args){
 			break;
 
 		case Transmit:
-			if(HAL_I2C_Slave_Transmit(&(spikeData->I2cHandle), spikeData->aTxBuffer, spikeData->currTransmitSize, 30) != HAL_OK)	{
+			if(HAL_I2C_Slave_Transmit(&(spikeData->I2cHandle), spikeData->aTxBuffer, spikeData->currTransmitSize, 100) != HAL_OK)	{
 //				Error_Handler(); // the handle Error is not good in this case because it can be timeout (then the return code wont be HAL_OK)
 			}
 			spikeData->flow = Recv;
@@ -200,9 +200,14 @@ void ICD_handle(void *args){
 		default:
 
 		}
+		uint32_t startTimer = HAL_GetTick();
 		/* to not go into recv state more than once in a row */
 		while (HAL_I2C_GetState(&(spikeData->I2cHandle)) != HAL_I2C_STATE_READY){
-			sys_msleep(1); /* for the cpu to not poll */
+			if (HAL_GetTick() - startTimer > 200){
+				I2Cx_Refresh_Init(spikeData->I2cHandle.Instance, &(spikeData->I2cHandle));
+				break;
+			}
+			sys_msleep(1);
 		}
 	}
 }
