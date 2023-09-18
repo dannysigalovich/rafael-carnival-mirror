@@ -75,7 +75,6 @@ int main(void)
 
   GPIO_Config();
 
-  printf("Running, power on relay is disabled on this version...\r\n");
 //  while(!is_power_on());
 //  power_on_realy();
 
