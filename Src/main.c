@@ -17,7 +17,7 @@
 #include "udp_util/udp_conf.h"
 #include "lwip/tcpip.h"
 
-#define TREGO_DEBUG
+//#define TREGO_DEBUG
 
 #ifdef TREGO_DEBUG
 #include "uart/uart_config.h"

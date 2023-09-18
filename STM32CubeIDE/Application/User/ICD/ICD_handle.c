@@ -85,7 +85,6 @@ void buildLaunchCmd(LaunchCmd *cmd){
 		// build real launch command
 		cmd->missionId = missionAssigned(&misManager, spike_num);
 		cmd->secureLaunch = cmd->missionId == 0 ? 0 : SECURE_LAUNCH;
-		printf("sending launch command with mission %d to spike %d\r\n", cmd->missionId, spike_num + 1);
 	}
 	else{
 	 // build fake launch command (fill with zero or something similar)
@@ -139,11 +138,6 @@ void handle_request(SpikeTaskData* spikeData){
 }
 
 void save_FireFlyStatus(SpikeTaskData *spikeData){
-
-	if (!spikeData->currStatus.isReadyToLaunch && ((FireFlyStatus *) spikeData->aRxBuffer)->isReadyToLaunch){
-//		printf("Spike status is changed to 1\r\n");
-	}
-
 	memcpy(&(spikeData->currStatus), spikeData->aRxBuffer, sizeof(FireFlyStatus));
 }
 
