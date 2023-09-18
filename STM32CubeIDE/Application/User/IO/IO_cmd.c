@@ -9,9 +9,9 @@
 
 
 #define UP_DOWN_PULL_ACTION(GPIO_GROUP, PIN) do { \
-    HAL_GPIO_WritePin(GPIO_GROUP, PIN, 1); \
+    HAL_GPIO_WritePin(GPIO_GROUP, PIN, UP_DOWN_LOGIC_LEVEL); \
     sys_msleep(UP_DOWN_PULL_TIME); \
-    HAL_GPIO_WritePin(GPIO_GROUP, PIN, 0); \
+    HAL_GPIO_WritePin(GPIO_GROUP, PIN, !UP_DOWN_LOGIC_LEVEL); \
 } while (0)
 
 
