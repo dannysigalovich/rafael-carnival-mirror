@@ -22,20 +22,19 @@
  *	in this file can be used as example how to properly implement that functions
  *
  *	---------------------------------------------------------------------------------------
- *  @date 	April 2020
+ *  @date 	Sep 2023
  *  @author TregoLTD
- *  @author Haris Turkmanovic
- *  @email	harist@thevtool.com
+ *  @author Elad Sez
+ * @email	elad@trego.co.il
  *  ========================================================================================
  */
 /*----------------------------------- Standard Includes -----------------------------------*/
 #include <string.h>
 /*------------------------------------ STMCUbe Includes -----------------------------------*/
-#include "fmc.h"
-#include "stm32h7xx_hal_nor.h"
 
 /*------------------------------ Block Device Drive Includes ------------------------------*/
-#include "LittleFS/BD_Drivers/Flash_BD/bd_driver_flash.h"
+#include "bd_driver_flash.h"
+#include "stm32h7xx_hal_flash.h"
 
 
 
@@ -60,8 +59,11 @@ int bd_driver_flash_read(const struct lfs_config *LFSConfig, lfs_block_t BlockNo
 
 	for(idx=0; idx < ReadSize; idx+=2)
 	{
-		if(HAL_NOR_Read(&hnor1, (uint32_t *)&bd->buffer[BlockNo*LFSConfig->block_size + Offset + idx], &data) != HAL_OK)
+		if (!IS_FLASH_PROGRAM_ADDRESS_BANK2((uint32_t *)&bd->buffer[BlockNo*LFSConfig->block_size + Offset + idx])){
 			return 1;
+		}
+
+		data = *((uint16_t *)((uint32_t)(&bd->buffer[BlockNo*LFSConfig->block_size + Offset + idx])));
 
 		*((uint16_t *)((uint32_t)Buffer +idx)) = data;
 	}
@@ -74,16 +76,24 @@ int bd_driver_flash_prog(const struct lfs_config *LFSConfig, lfs_block_t BlockNo
 	LFS_BD_Flash *bd = LFSConfig->context;
 	uint32_t idx=0;
 
+	if (HAL_FLASH_Unlock() != HAL_OK)
+		return 1;
+
 	for(idx=0; idx < DataSize; idx+=2)
 	{
-		if(HAL_NOR_Program(&hnor1, (uint32_t *)(&bd->buffer[BlockNo*LFSConfig->block_size + Offset + idx]),
-				(uint16_t *)((uint32_t)Data + idx)) != HAL_OK)
+		// if(HAL_NOR_Program(&hnor1, (uint32_t *)(&bd->buffer[BlockNo*LFSConfig->block_size + Offset + idx]),
+		// 		(uint16_t *)((uint32_t)Data + idx)) != HAL_OK)
+		// {
+		// 	return 1;
+		// }
+		// if(HAL_NOR_GetStatus(&hnor1, (uint32_t)&bd->buffer[BlockNo*LFSConfig->block_size + Offset + idx],
+		// 		HAL_MAX_DELAY) != HAL_NOR_STATUS_SUCCESS)
+		// 	return 1;
+		if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_FLASHWORD, (uint32_t)(&bd->buffer[BlockNo*LFSConfig->block_size + Offset + idx]),
+				*((uint16_t *)((uint32_t)Data + idx))) != HAL_OK)
 		{
 			return 1;
 		}
-		if(HAL_NOR_GetStatus(&hnor1, (uint32_t)&bd->buffer[BlockNo*LFSConfig->block_size + Offset + idx],
-				HAL_MAX_DELAY) != HAL_NOR_STATUS_SUCCESS)
-			return 1;
 	}
 	return 0;
 }
