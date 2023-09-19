@@ -18,6 +18,8 @@ LaunchError launch(uint8_t spike){
 
 	LaunchError status = ElevStaysDown;
 
+	spikeData[spike].elevGoUp = true;
+
 	elev_up(spike);
 
 	uint32_t start = HAL_GetTick();
@@ -32,6 +34,8 @@ LaunchError launch(uint8_t spike){
 		elev_down(spike);
 		return ElevStaysDown;
 	}
+
+	spikeData[spike].elevGoUp = false;
 
 	spikeData[spike].elevIsUp = true;
 	sys_msleep(ELEV_ACTION_WAIT);

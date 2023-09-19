@@ -40,6 +40,7 @@ typedef struct SpikeTaskData{
    FireFlyStatus currStatus;
    uint8_t msgId; // get increment every time we send something
    FlowState flow;
+   bool elevGoUp;
    bool elevIsUp;
 } SpikeTaskData;
 

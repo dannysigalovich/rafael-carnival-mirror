@@ -20,7 +20,7 @@ extern char secret_words[2][MAX_SECRET_SIZE];
 extern CircularBuffer INSPVAXBuff;
 extern SpikeTaskData spikeData[MAX_SPIKES];
 
-void convertINSPVAXToNavFrameINS(INSPVAX *inspvax, NavFrameINS *navFrame) {
+void convertINSPVAXToNavFrameINS(INSPVAX *inspvax, NavFrameINS *navFrame, bool elevGoUp) {
     navFrame->weeknumber = inspvax->header.week;
     navFrame->mSec = inspvax->header.ms;
     navFrame->PositionLatitudeGeoRad = inspvax->latitude;
@@ -32,7 +32,7 @@ void convertINSPVAXToNavFrameINS(INSPVAX *inspvax, NavFrameINS *navFrame) {
     navFrame->AzimuthDeg = inspvax->azimuth;
     navFrame->PitchDeg = inspvax->pitch;
     navFrame->RollDeg = inspvax->roll;
-    navFrame->Status = inspvax->status;
+    navFrame->Status = elevGoUp ? ELEV_GO_UP_STATUS : inspvax->status;
     navFrame->cs = 1;
 }
 
@@ -50,13 +50,13 @@ void convertINSPVAXToNavFrameINSSTD(INSPVAX *inspvax, NavFrameINSSTD *navFrame){
 
 }
 
-void buildINSFrame(NavFrameINS *frame){
+void buildINSFrame(NavFrameINS *frame, bool elevGoUp){
 	INSPVAX inspvax;
 	readINSPVAX(&INSPVAXBuff, &inspvax);
 
 	frame->msgType = NavInsEnum;
 
-	convertINSPVAXToNavFrameINS(&inspvax, frame); // check how the real convert works
+	convertINSPVAXToNavFrameINS(&inspvax, frame, elevGoUp); // check how the real convert works
 }
 
 void buildINSSTDFrame(NavFrameINSSTD *frame){
@@ -110,7 +110,7 @@ void handle_request(SpikeTaskData* spikeData){
 
 	case NavInsEnum:
 		NavFrameINS PVAFrame;
-		buildINSFrame(&PVAFrame);
+		buildINSFrame(&PVAFrame, spikeData->elevGoUp);
 		PVAFrame.msgId = spikeData->msgId++;
 		memcpy(aTxBuffer, &PVAFrame, sizeof(PVAFrame));
 		break;
