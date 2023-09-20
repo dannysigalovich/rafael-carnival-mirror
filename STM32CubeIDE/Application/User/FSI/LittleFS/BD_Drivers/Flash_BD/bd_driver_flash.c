@@ -54,20 +54,55 @@ int bd_driver_flash_init(const struct lfs_config *LFSConfig, const LFS_BD_Flash_
 int bd_driver_flash_read(const struct lfs_config *LFSConfig, lfs_block_t BlockNo, lfs_off_t Offset, void* Buffer, lfs_size_t ReadSize)
 {
 	LFS_BD_Flash *bd = LFSConfig->context;
-	uint16_t     data;
+	uint32_t     data;
 	uint32_t     idx=0;
 
-	for(idx=0; idx < ReadSize; idx+=2)
+	for(idx=0; idx < ReadSize; idx+=4)
 	{
 		if (!IS_FLASH_PROGRAM_ADDRESS_BANK2((uint32_t *)&bd->buffer[BlockNo*LFSConfig->block_size + Offset + idx])){
 			return 1;
 		}
 
-		data = *((uint16_t *)((uint32_t)(&bd->buffer[BlockNo*LFSConfig->block_size + Offset + idx])));
+		data = *(uint32_t*)(&(bd->buffer[BlockNo*LFSConfig->block_size + Offset + idx]));
 
-		*((uint16_t *)((uint32_t)Buffer +idx)) = data;
+		*(uint32_t *)(((uint8_t *)Buffer) +idx) = data;
 	}
 
+	return 0;
+}
+
+int flash_write_helper(const uint32_t *src, uint32_t dst, uint32_t size)
+{
+    // Unlock flash
+    if (HAL_FLASH_Unlock() != HAL_OK) {
+		return 1;
+	}
+
+    // Program the flash 32 bytes at a time.
+    for (int i=0; i<size/32; i++) {
+		if (!IS_FLASH_PROGRAM_ADDRESS_BANK2((uint32_t *)dst)){
+			// the address is not in the flash of the block device
+			HAL_FLASH_Lock(); // lock the flash
+			return 1;
+		}
+        if (HAL_FLASH_Program(TYPEPROGRAM_WORD, dst, (uint64_t)(uint32_t) src) != HAL_OK) {
+            // error occurred during flash write
+            HAL_FLASH_Lock(); // lock the flash
+			return 1;
+        }
+
+		if (HAL_FLASH_GetError() != HAL_FLASH_ERROR_NONE) {
+			// error occurred during flash write
+			HAL_FLASH_Lock(); // lock the flash
+			return 1;
+		}
+
+        src += 8;
+        dst += 32;
+    }
+
+    // lock the flash
+    HAL_FLASH_Lock();
 	return 0;
 }
 
@@ -76,38 +111,22 @@ int bd_driver_flash_prog(const struct lfs_config *LFSConfig, lfs_block_t BlockNo
 	LFS_BD_Flash *bd = LFSConfig->context;
 	uint32_t idx=0;
 
-	if (HAL_FLASH_Unlock() != HAL_OK)
-		return 1;
+	uint32_t dst = (uint32_t)(&bd->buffer[BlockNo*LFSConfig->block_size + Offset]);
+	uint32_t *src = (uint32_t *)Data;
 
-	for(idx=0; idx < DataSize; idx+=2)
-	{
-		// if(HAL_NOR_Program(&hnor1, (uint32_t *)(&bd->buffer[BlockNo*LFSConfig->block_size + Offset + idx]),
-		// 		(uint16_t *)((uint32_t)Data + idx)) != HAL_OK)
-		// {
-		// 	return 1;
-		// }
-		// if(HAL_NOR_GetStatus(&hnor1, (uint32_t)&bd->buffer[BlockNo*LFSConfig->block_size + Offset + idx],
-		// 		HAL_MAX_DELAY) != HAL_NOR_STATUS_SUCCESS)
-		// 	return 1;
-		if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_FLASHWORD, (uint32_t)(&bd->buffer[BlockNo*LFSConfig->block_size + Offset + idx]),
-				*((uint16_t *)((uint32_t)Data + idx))) != HAL_OK)
-		{
-			return 1;
-		}
-	}
-	return 0;
+	return flash_write_helper(src, dst, DataSize);
 }
 
 int bd_driver_flash_erase(const struct lfs_config *LFSConfig, lfs_block_t BlockNo)
 {
 	LFS_BD_Flash *bd = LFSConfig->context;
 
-	if(HAL_NOR_Erase_Block(&hnor1, (uint32_t)&bd->buffer[BlockNo*LFSConfig->block_size], 0) != HAL_OK)
-		return 1;
+	// if(HAL_NOR_Erase_Block(&hnor1, (uint32_t)&bd->buffer[BlockNo*LFSConfig->block_size], 0) != HAL_OK)
+	// 	return 1;
 
-	if(HAL_NOR_GetStatus(&hnor1, (uint32_t)&bd->buffer[BlockNo*LFSConfig->block_size],
-			HAL_MAX_DELAY) != HAL_NOR_STATUS_SUCCESS)
-		return 1;
+	// if(HAL_NOR_GetStatus(&hnor1, (uint32_t)&bd->buffer[BlockNo*LFSConfig->block_size],
+	// 		HAL_MAX_DELAY) != HAL_NOR_STATUS_SUCCESS)
+	// 	return 1;
 
 	return 0;
 }
@@ -115,6 +134,5 @@ int bd_driver_flash_erase(const struct lfs_config *LFSConfig, lfs_block_t BlockN
 int bd_driver_flash_sync(const struct lfs_config *LFSConfig)
 {
 	(void)LFSConfig;
-
-    return 0;
+	return FLASH_WaitForLastOperation(HAL_MAX_DELAY, FLASH_BANK_2);
 }

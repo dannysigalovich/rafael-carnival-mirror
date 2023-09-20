@@ -40,7 +40,7 @@
 /*Minimum data size which can be program to the flash. See MCU flash datasheet*/
 #define BD_DRIVER_FLASH_PROG_SIZE				0x0000020 //32 bytes (one flash word)
 /*Minimum data size which can be read from flash. See MCU flash datasheet*/
-#define BD_DRIVER_FLASH_READ_SIZE				0x0000008 //8 bytes
+#define BD_DRIVER_FLASH_READ_SIZE				0x0000004 //4 bytes
 /*One flash block size*/
 #define BD_DRIVER_FLASH_BLOCK_SIZE    			0x00020000 //128K	bytes
 /*Number of flash blocks used with file system*/

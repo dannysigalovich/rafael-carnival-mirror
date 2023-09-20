@@ -24,9 +24,9 @@
 /*---------------------------- File System Interface Configuration ------------------------*/
 //---Buffer configured by user which are necessary for FSI---//
 char	    				LFS_BUFFER_WORKING_DIRECTORY[1024];
-uint32_t                    lfs_buff_write[BD_DRIVER_FLASH_PROG_SIZE/4];
-uint32_t 					lfs_buff_read[BD_DRIVER_FLASH_READ_SIZE/4];
-uint32_t					lfs_buff_lookahead[BD_DRIVER_FLASH_PROG_SIZE/4];
+uint32_t                    lfs_buff_write[BD_DRIVER_FLASH_PROG_SIZE];
+uint32_t 					lfs_buff_read[BD_DRIVER_FLASH_READ_SIZE];
+uint32_t					lfs_buff_lookahead[BD_DRIVER_FLASH_PROG_SIZE];
 //uint8_t 					LFS_BUFFER_WRITE[BD_DRIVER_FLASH_PROG_SIZE];
 //uint8_t 					LFS_BUFFER_READ[BD_DRIVER_FLASH_READ_SIZE];
 //uint8_t 					LFS_BUFFER_LOOKAHEAD[BD_DRIVER_FLASH_PROG_SIZE];
