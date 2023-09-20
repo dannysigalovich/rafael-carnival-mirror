@@ -546,7 +546,7 @@ uint8_t		fsi_stat_size(const char* Param, uint32_t ParamSize){
 	return 0;
 }
 
-
+#if 0
 //TODO remove after demo dbg
 int demo_r( const char* Param, const uint32_t addr_Buf )
 {
@@ -579,3 +579,5 @@ int demo_r( const char* Param, const uint32_t addr_Buf )
 
     return ret_code;   //Success
 }
+
+#endif

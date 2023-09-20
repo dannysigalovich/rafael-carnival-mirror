@@ -34,7 +34,7 @@
 #include <stdint.h>
 /*----------------------------------- LittleFS Includes -----------------------------------*/
 #include "FSI/LittleFS/lfs.h"
-#include "stm32h753xx.h"
+#include "main.h"
 
 /*------------------------------ Block Device Configuration -------------------------------*/
 /*Minimum data size which can be program to the flash. See MCU flash datasheet*/

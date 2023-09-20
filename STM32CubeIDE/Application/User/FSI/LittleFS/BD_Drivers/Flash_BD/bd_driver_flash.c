@@ -29,12 +29,10 @@
  *  ========================================================================================
  */
 /*----------------------------------- Standard Includes -----------------------------------*/
-#include <string.h>
 /*------------------------------------ STMCUbe Includes -----------------------------------*/
 
 /*------------------------------ Block Device Drive Includes ------------------------------*/
 #include "bd_driver_flash.h"
-#include "stm32h7xx_hal_flash.h"
 
 
 
@@ -59,7 +57,7 @@ int bd_driver_flash_read(const struct lfs_config *LFSConfig, lfs_block_t BlockNo
 
 	for(idx=0; idx < ReadSize; idx+=4)
 	{
-		if (!IS_FLASH_PROGRAM_ADDRESS_BANK2((uint32_t *)&bd->buffer[BlockNo*LFSConfig->block_size + Offset + idx])){
+		if (!IS_FLASH_PROGRAM_ADDRESS_BANK2((uint32_t)&bd->buffer[BlockNo*LFSConfig->block_size + Offset + idx])){
 			return 1;
 		}
 
@@ -80,12 +78,12 @@ int flash_write_helper(const uint32_t *src, uint32_t dst, uint32_t size)
 
     // Program the flash 32 bytes at a time.
     for (int i=0; i<size/32; i++) {
-		if (!IS_FLASH_PROGRAM_ADDRESS_BANK2((uint32_t *)dst)){
+		if (!IS_FLASH_PROGRAM_ADDRESS_BANK2(dst)){
 			// the address is not in the flash of the block device
 			HAL_FLASH_Lock(); // lock the flash
 			return 1;
 		}
-        if (HAL_FLASH_Program(TYPEPROGRAM_WORD, dst, (uint64_t)(uint32_t) src) != HAL_OK) {
+        if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_FLASHWORD, dst, (uint32_t) src) != HAL_OK) {
             // error occurred during flash write
             HAL_FLASH_Lock(); // lock the flash
 			return 1;
@@ -109,7 +107,6 @@ int flash_write_helper(const uint32_t *src, uint32_t dst, uint32_t size)
 int bd_driver_flash_prog(const struct lfs_config *LFSConfig, lfs_block_t BlockNo, lfs_off_t Offset, const void* Data, lfs_size_t DataSize)
 {
 	LFS_BD_Flash *bd = LFSConfig->context;
-	uint32_t idx=0;
 
 	uint32_t dst = (uint32_t)(&bd->buffer[BlockNo*LFSConfig->block_size + Offset]);
 	uint32_t *src = (uint32_t *)Data;
