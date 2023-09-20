@@ -55,32 +55,26 @@ LaunchError launch(uint8_t spike){
 void launchSequence(void *args){
 	LaunchError err = NoError;
 
-	// printf("Launch sequence monitoring started\r\n");
+	uint8_t spikeOrder = 0;
 
 	while(1){
 		for (int i = 0; i < MAX_MISSIONS; ++i){
 			err = 0;
 			if (misManager.missions[i].completed) continue;
-			if (misManager.missions[i].assigned){
-				// printf("start launching mission %d with spike %d\r\n",
-				// misManager.missions[i].mission_number, misManager.missions[i].assigned_to + 1);
+			// the last && is determine the order of the launch to be by the spike number (not so smart) TODO: maybe change this for it to be more accurate
+			if (misManager.missions[i].assigned && misManager.missions[i].assigned_to == spikeOrder){
+				++spikeOrder;
 				err = launch(misManager.missions[i].assigned_to);
 				if (err == NoError){
-					// printf("Spike %d launched mission %d successfully\r\n",
-					// misManager.missions[i].assigned_to + 1, misManager.missions[i].mission_number);
 					completeInSuccess(&misManager, i);
 				}
 				else if (err == SpikeNotFreeAndElevUp){
 					// when the elevator stays up is a fatal error, we need to stop the launch sequence and wait for manual intervention
-					// printf("##### FATAL ERROR ##### Spike %d is not free and elevator is stuck up! stop all.\r\n",
-					// misManager.missions[i].assigned_to + 1);
 					break;
 				}
 				else if (err == ElevStaysDown || err == SpikeNotFreeAndElevDown){
 					// when the elevator stays down is not a fatal error,
 					// we need to complete the mission in failure for it to be assigned to another spike
-					// printf("Spike %d launched mission %d in failure, the mission will be assigned to another spike \r\n",
-					// misManager.missions[i].assigned_to + 1, misManager.missions[i].mission_number);
 					completeInFailure(&misManager, i);
 				}
 			}

@@ -77,18 +77,21 @@ void buildLaunchCmd(LaunchCmd *cmd){
 	_Bool part_decision = spikeData[spike_num].currStatus.isReadyToLaunch && isLaunchSwitchOn();
 	_Bool decision = part_decision && spikeData[spike_num].elevIsUp;
 
-	if (!decision && part_decision){
-		missionAssigned(&misManager, spike_num); // assign a mission for the launch sequence to start
-	}
+	cmd->missionId = missionAssigned(&misManager, spike_num);
+
+	/* TODO:  Return to best implementation if needed*/
+//	if (!decision && part_decision){
+//		missionAssigned(&misManager, spike_num); // assign a mission for the launch sequence to start
+//	}
 
 	if (decision){
 		// build real launch command
-		cmd->missionId = missionAssigned(&misManager, spike_num);
+//		cmd->missionId = missionAssigned(&misManager, spike_num);
 		cmd->secureLaunch = cmd->missionId == 0 ? 0 : SECURE_LAUNCH;
 	}
 	else{
 	 // build fake launch command (fill with zero or something similar)
-		cmd->missionId = 0;
+//		cmd->missionId = 0;
 		cmd->secureLaunch = 0;
 	}
 	cmd->cs = 1;
