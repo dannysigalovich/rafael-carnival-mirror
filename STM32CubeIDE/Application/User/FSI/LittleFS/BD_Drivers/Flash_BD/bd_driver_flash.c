@@ -117,16 +117,52 @@ int bd_driver_flash_prog(const struct lfs_config *LFSConfig, lfs_block_t BlockNo
 	return flash_write_helper(src, dst, DataSize);
 }
 
+/**
+  * @brief  Gets the sector of a given address
+  * @param  Address: Flash address
+  * @retval The sector of a given address
+  */
+uint32_t get_sector(uint32_t address)
+{
+    uint32_t sector = 0;
+
+    if (address < (FLASH_BASE + FLASH_BANK_SIZE)) {
+        sector = (address - FLASH_BASE) / FLASH_SECTOR_SIZE;
+    } else {
+        sector = (address - (FLASH_BASE + FLASH_BANK_SIZE)) / FLASH_SECTOR_SIZE;
+    }
+
+    return sector;
+}
+
 int bd_driver_flash_erase(const struct lfs_config *LFSConfig, lfs_block_t BlockNo)
 {
 	LFS_BD_Flash *bd = LFSConfig->context;
 
-	// if(HAL_NOR_Erase_Block(&hnor1, (uint32_t)&bd->buffer[BlockNo*LFSConfig->block_size], 0) != HAL_OK)
-	// 	return 1;
+	FLASH_EraseInitTypeDef EraseInitStruct;
+    uint32_t SectorError = 0;
 
-	// if(HAL_NOR_GetStatus(&hnor1, (uint32_t)&bd->buffer[BlockNo*LFSConfig->block_size],
-	// 		HAL_MAX_DELAY) != HAL_NOR_STATUS_SUCCESS)
-	// 	return 1;
+	EraseInitStruct.TypeErase   = FLASH_TYPEERASE_SECTORS;
+	EraseInitStruct.Banks       = FLASH_BANK_2;
+	EraseInitStruct.Sector      = get_sector((uint32_t)&bd->buffer[BlockNo*LFSConfig->block_size]);
+	EraseInitStruct.NbSectors   = 1;
+	EraseInitStruct.VoltageRange= FLASH_VOLTAGE_RANGE_3;
+
+	if (EraseInitStruct.Sector == 0xFFFFFFFF || HAL_FLASH_Unlock() != HAL_OK) {
+		return 1;
+	}
+
+	if (HAL_FLASHEx_Erase(&EraseInitStruct, &SectorError) != HAL_OK) {
+		HAL_FLASH_Lock();
+		return 1;
+	}
+
+	if (HAL_FLASH_GetError() != HAL_FLASH_ERROR_NONE || SectorError != 0xFFFFFFFF) {
+		HAL_FLASH_Lock();
+		return 1;
+	}
+
+	HAL_FLASH_Lock();
 
 	return 0;
 }

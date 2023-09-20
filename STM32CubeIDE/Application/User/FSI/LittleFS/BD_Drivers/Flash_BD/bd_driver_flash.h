@@ -42,11 +42,11 @@
 /*Minimum data size which can be read from flash. See MCU flash datasheet*/
 #define BD_DRIVER_FLASH_READ_SIZE				0x0000004 //4 bytes
 /*One flash block size*/
-#define BD_DRIVER_FLASH_BLOCK_SIZE    			0x00020000 //128K	bytes
+#define BD_DRIVER_FLASH_BLOCK_SIZE    			FLASH_SECTOR_SIZE //128K	bytes
 /*Number of flash blocks used with file system*/
-#define BD_DRIVER_FLASH_BLOCK_COUNT    			0x00000008 //8 blocks
+#define BD_DRIVER_FLASH_BLOCK_COUNT    			FLASH_SECTOR_TOTAL //8 blocks
 /*One flash bank size*/
-#define BD_DRIVER_FLASH_BANK_SIZE				0x00100000 //1M Bytes
+#define BD_DRIVER_FLASH_BANK_SIZE				FLASH_BANK_SIZE //1M Bytes
 /*Number of bank in flash*/
 #define BD_DRIVER_FLASH_BANK_COUNT				0x00000001 //1 bank
 /*Start of the flash memory part used with file system*/
