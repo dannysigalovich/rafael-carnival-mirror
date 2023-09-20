@@ -60,7 +60,9 @@ void launchSequence(void *args){
 	while(1){
 		for (int i = 0; i < MAX_MISSIONS; ++i){
 			err = 0;
-			if (misManager.missions[i].completed) continue;
+			if (misManager.missions[i].completed ||
+					/* This line stop the launching in case the spike got a mission but not need to be launch yet */
+			   (misManager.missions[i].assigned && !spikeData[misManager.missions[i].assigned_to].part_decision)) continue;
 			// the last && is determine the order of the launch to be by the spike number (not so smart) TODO: maybe change this for it to be more accurate
 			if (misManager.missions[i].assigned && misManager.missions[i].assigned_to == spikeOrder){
 				++spikeOrder;

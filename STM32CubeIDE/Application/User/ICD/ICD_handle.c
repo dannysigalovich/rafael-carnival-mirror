@@ -79,19 +79,17 @@ void buildLaunchCmd(LaunchCmd *cmd){
 
 	cmd->missionId = missionAssigned(&misManager, spike_num);
 
-	/* TODO:  Return to best implementation if needed*/
-//	if (!decision && part_decision){
-//		missionAssigned(&misManager, spike_num); // assign a mission for the launch sequence to start
-//	}
+
+	if (!decision && part_decision){
+		spikeData[spike_num].part_decision = true;
+	}
 
 	if (decision){
-		// build real launch command
-//		cmd->missionId = missionAssigned(&misManager, spike_num);
+		// sign to spike to fly
 		cmd->secureLaunch = cmd->missionId == 0 ? 0 : SECURE_LAUNCH;
 	}
 	else{
 	 // build fake launch command (fill with zero or something similar)
-//		cmd->missionId = 0;
 		cmd->secureLaunch = 0;
 	}
 	cmd->cs = 1;

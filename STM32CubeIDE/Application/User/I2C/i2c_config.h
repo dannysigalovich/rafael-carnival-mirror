@@ -27,7 +27,7 @@
 /* I2C TIMING Register define when I2C clock source is APB1 (SYSCLK/4) */
 /* I2C TIMING is calculated in case of the I2C Clock source is the APB1CLK = 100 MHz */
 /* This example use TIMING to 0x00901954 to reach 400 kHz speed (Rise time = 100 ns, Fall time = 10 ns) */
-#define I2C_TIMING_400KHZ      		0x00901954
+#define I2C_TIMING_400KHZ      			0x00901954
 #define I2C_TIMING_100KHZ 				0x10707DBC
 #define I2C_HANDLE_THREAD_PRIO    		( osPriorityNormal )
 #define MAX_SPIKES 4
@@ -42,6 +42,7 @@ typedef struct SpikeTaskData{
    FlowState flow;
    bool elevGoUp;
    bool elevIsUp;
+   bool part_decision;  /* determine when to start the launch sequence for the spike (full decision is part_decision&&ELEV_IS_UP)*/
 } SpikeTaskData;
 
 
