@@ -13,6 +13,7 @@
 #define MAX_SECRET_SIZE 16
 #define MISSIONS_HEADER_SIZE 5
 #define SECURE_LAUNCH 135
+#define ELEV_GO_UP_STATUS 20
 
 #define PACKED __attribute__((packed, aligned(1)))
 
