@@ -8,7 +8,7 @@ extern FSI_Config                   DEFAULT_FSI_CONFIGURATION;
 lfs_file_t 							curr_log_file;		/*!< LittleFS file current log */
 
 
-void init_logger(void){
+void Logger_Init(void){
     /* The fsi init will config the littlefs with our flash and mount a rootfs for us */
     fsi_init(&DEFAULT_FSI_CONFIGURATION);
 

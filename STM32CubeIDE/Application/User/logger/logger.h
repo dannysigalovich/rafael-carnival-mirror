@@ -20,7 +20,7 @@ typedef enum {
 } log_level_t;
 
 
-void init_logger(void);
+void Logger_Init(void);
 
 void logger_test(void);
 
