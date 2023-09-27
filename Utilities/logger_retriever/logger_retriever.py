@@ -2,29 +2,77 @@ import socket
 import struct
 import threading
 from time import sleep
+import signal
 
 # Define UDP server address and port
 UDP_SERVER_ADDRESS = '192.168.1.10'
 UDP_SERVER_PORT = 7
 
+print(f"""
+██╗      ██████╗  ██████╗  ██████╗ ███████╗██████╗ 
+██║     ██╔═══██╗██╔════╝ ██╔════╝ ██╔════╝██╔══██╗
+██║     ██║   ██║██║  ███╗██║  ███╗█████╗  ██████╔╝
+██║     ██║   ██║██║   ██║██║   ██║██╔══╝  ██╔══██╗
+███████╗╚██████╔╝╚██████╔╝╚██████╔╝███████╗██║  ██║
+╚══════╝ ╚═════╝  ╚═════╝  ╚═════╝ ╚══════╝╚═╝  ╚═╝
+                                                   
+██████╗ ███████╗████████╗██████╗ ██╗███████╗██╗   ██╗███████╗██████╗ 
+██╔══██╗██╔════╝╚══██╔══╝██╔══██╗██║██╔════╝██║   ██║██╔════╝██╔══██╗
+██████╔╝█████╗     ██║   ██████╔╝██║█████╗  ██║   ██║█████╗  ██████╔╝
+██╔══██╗██╔══╝     ██║   ██╔══██╗██║██╔══╝  ╚██╗ ██╔╝██╔══╝  ██╔══██╗
+██║  ██║███████╗   ██║   ██║  ██║██║███████╗ ╚████╔╝ ███████╗██║  ██║
+╚═╝  ╚═╝╚══════╝   ╚═╝   ╚═╝  ╚═╝╚═╝╚══════╝  ╚═══╝  ╚══════╝╚═╝  ╚═╝
+ Trego LTD. Luanch-Computer Info: {UDP_SERVER_ADDRESS}:{UDP_SERVER_PORT}                                          
+    """)
+
+
 pkt_list = None
 pkt_log = None
+is_running = True
 sock_first_lock = threading.Lock()
 sock_second_lock = threading.Lock()
 
-def recv_pkt(sock):
-    
-    global pkt_list
-    sock_first_lock.acquire()
-    pkt, server_address = sock.recvfrom(4096)
-    pkt_list = pkt.decode()
-    sock_first_lock.release()
+def smart_recv(sock, pkt_kind):
+    sock.settimeout(0.5)
+    pkt = None
+    while pkt is None and is_running:
+        try:
+            pkt, server_address = sock.recvfrom(4096)
+            if pkt_kind == 'list':
+                global pkt_list
+                pkt_list = pkt.decode()
+            elif pkt_kind == 'log':
+                global pkt_log
+                pkt_log = pkt.decode()
+            return
+        except socket.timeout:
+            if not is_running:
+                exit(0)
+            continue
 
-    global pkt_log
+def recv_pkt(sock):
+    sock_first_lock.acquire()
+    smart_recv(sock, 'list')
+    sock_first_lock.release()
     sock_second_lock.acquire()
-    pkt, server_address = sock.recvfrom(4096)
-    pkt_log = pkt.decode()
+    smart_recv(sock, 'log')
     sock_second_lock.release()
+    
+
+# Define a signal handler function
+def signal_handler(sig, frame):
+    global is_running
+    is_running = False
+    print("\nCtrl+C pressed. Exiting...")
+    # cleanup operations
+    if sock_first_lock.locked():
+        sock_first_lock.release()
+    if sock_second_lock.locked():
+        sock_second_lock.release()
+    exit(0)
+
+# Register the signal handler for SIGINT (Ctrl+C)
+signal.signal(signal.SIGINT, signal_handler)
 
 # Create a UDP socket
 udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -61,7 +109,7 @@ print("Available logs:")
 for i, log in enumerate(available_logs):
     if log == '' and i == 0:
         print("No logs available")
-        exit()
+        exit(1)
     if log == '':
         continue
     print(f"{i + 1}. {log}")
