@@ -93,7 +93,10 @@ void level_log(log_level_t level, const char *message, ...) {
         return;
     }
 
-    chars_written = vsnprintf(log_message + chars_written, MAX_LOG_MESSAGE_SIZE - chars_written, message, args);
+    chars_written += vsnprintf(log_message + chars_written, MAX_LOG_MESSAGE_SIZE - chars_written, message, args);
+
+    log_message[chars_written] = '\n';
+    log_message[++chars_written] = '\0';
 
     va_end(args);
 

@@ -41,7 +41,7 @@ struct_format = "5s128s"  # 5 bytes for sync and bytes for the word
 
 # Create the struct with values
 sync = bytes([0xAA, 0xBB, 0xCC, 0xDD, 0xEE])
-word = b"REQUEST_LOG_LIST"  # Ensure it's bytes, not a string
+word = b"REQUEST_LIST_LOGS"  # Ensure it's bytes, not a string
 
 # Pack the struct into bytes
 request_packet = struct.pack(struct_format, sync, word)
@@ -59,6 +59,11 @@ available_logs = pkt_list.split('\n')
 
 print("Available logs:")
 for i, log in enumerate(available_logs):
+    if log == '' and i == 0:
+        print("No logs available")
+        exit()
+    if log == '':
+        continue
     print(f"{i + 1}. {log}")
 
 # Step 3: Wait for user input to select a log
@@ -81,7 +86,7 @@ while pkt_log is None:
 selected_log_content = pkt_log.encode()
 
 # Step 6: Save the selected log as a file
-log_file_name = f"{selected_log_name}.log"
+log_file_name = f"{selected_log_name}"
 with open(log_file_name, 'w') as log_file:
     log_file.write(selected_log_content.decode())
 

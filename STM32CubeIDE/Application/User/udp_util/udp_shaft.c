@@ -72,7 +72,7 @@ void init_udp_broker(){
 
 	build_dummy_missions();
 
-	sys_thread_new("udp_connection", udp_shaft_thread, NULL, DEFAULT_THREAD_STACKSIZE, UDP_THREAD_PRIO);
+	sys_thread_new("udp_connection", udp_shaft_thread, NULL, UDP_THREAD_STACKSIZE, UDP_THREAD_PRIO);
 }
 
 /* Private functions ---------------------------------------------------------*/
@@ -171,7 +171,8 @@ uint8_t log_req_sync_check(struct pbuf *pbuf){
     return 0;
   }
   uint8_t *sync = pbuf->payload;
-  return check_sync(sync) && strncmp((char*)sync + 5, REQ_LOG, sizeof(REQ_LOG)) == 0;
+  bool bla = strncmp((char*)sync + SYNC_SIZE, REQ_LOG, strlen(REQ_LOG)) == 0;
+  return check_sync(sync) && bla;
 }
 
 uint8_t log_list_req_sync_check(struct pbuf *pbuf){
@@ -179,7 +180,7 @@ uint8_t log_list_req_sync_check(struct pbuf *pbuf){
     return 0;
   }
   uint8_t *sync = pbuf->payload;
-  return check_sync(sync) && strncmp((char*)sync + 5, REQ_LOG_LIST, sizeof(REQ_LOG_LIST)) == 0;
+  return check_sync(sync) && strncmp((char*)sync + SYNC_SIZE, REQ_LOG_LIST, strlen(REQ_LOG_LIST)) == 0;
 }
 
 
