@@ -14,6 +14,7 @@
 #include <string.h>
 #include "Novatel/navMesseging.h"
 #include "missionManager/missionManager.h"
+#include "logger/logger.h"
 
 extern MissionManager misManager;
 extern char secret_words[2][MAX_SECRET_SIZE];
@@ -86,6 +87,7 @@ void buildLaunchCmd(LaunchCmd *cmd){
 
 	if (decision){
 		// sign to spike to fly
+		log_info("sending launch command to spike %d", spike_num);
 		cmd->secureLaunch = cmd->missionId == 0 ? 0 : SECURE_LAUNCH;
 	}
 	else{
@@ -139,6 +141,11 @@ void handle_request(SpikeTaskData* spikeData){
 }
 
 void save_FireFlyStatus(SpikeTaskData *spikeData){
+
+	if (! spikeData->currStatus.isReadyToLaunch && ((FireFlyStatus *)spikeData->aRxBuffer)->isReadyToLaunch){
+		log_info("spike %d turn on his ready to launch bit", getSpikeNumber(xTaskGetCurrentTaskHandle()));
+	}
+
 	memcpy(&(spikeData->currStatus), spikeData->aRxBuffer, sizeof(FireFlyStatus));
 }
 

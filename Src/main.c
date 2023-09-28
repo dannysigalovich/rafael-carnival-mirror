@@ -16,6 +16,7 @@
 #include "IO/IO.h"
 #include "udp_util/udp_conf.h"
 #include "lwip/tcpip.h"
+#include "logger/logger.h"
 
 //#define TREGO_DEBUG
 
@@ -75,6 +76,8 @@ int main(void)
 
   GPIO_Config();
 
+  Logger_Init();
+
 //  while(!is_power_on());
 //  power_on_realy();
 
@@ -100,6 +103,9 @@ int main(void)
  */
 static void StartThread(void const *argument)
 {
+
+  log_info("Init Thread Started");
+
   /* Initialize the LwIP stack */
   tcpip_init(NULL, NULL);
 

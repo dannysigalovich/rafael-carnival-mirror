@@ -14,6 +14,7 @@
 #include "stm32h7xx_nucleo.h"
 #include "stm32h7xx_hal_i2c.h"
 #include "cmsis_os.h"
+#include "logger/logger.h"
 
 SpikeTaskData spikeData[MAX_SPIKES] = {0};
 
@@ -21,6 +22,7 @@ void I2Cx_Init(void *I2CInstance, I2C_HandleTypeDef *I2cHandle);
 void I2Cx_Refresh_Init(void *I2CInstance, I2C_HandleTypeDef *I2cHandle);
 
 void I2C_start_listen(){
+  log_info("I2C start listen - 4 spikes");
   sys_thread_new("I2C_spike0", ICD_handle, spikeData, DEFAULT_THREAD_STACKSIZE, I2C_HANDLE_THREAD_PRIO);
   sys_thread_new("I2C_spike1", ICD_handle, spikeData + 1, DEFAULT_THREAD_STACKSIZE, I2C_HANDLE_THREAD_PRIO);
   sys_thread_new("I2C_spike2", ICD_handle, spikeData + 2, DEFAULT_THREAD_STACKSIZE, I2C_HANDLE_THREAD_PRIO);
@@ -28,6 +30,7 @@ void I2C_start_listen(){
 }
 
 void I2C_Init(){
+  log_info("I2C Init - 4 spikes");
   I2Cx_Init(I2C1, &(spikeData[0].I2cHandle));
   I2Cx_Init(I2C2, &(spikeData[1].I2cHandle));
   I2Cx_Init(I2C3, &(spikeData[2].I2cHandle));

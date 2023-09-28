@@ -10,6 +10,7 @@
 #include "lwip/apps/fs.h"
 #include "missionManager/missionManager.h"
 #include "I2C/i2c_config.h"
+#include "logger/logger.h"
 
 extern MissionManager misManager;
 extern SpikeTaskData spikeData[MAX_SPIKES];
@@ -61,19 +62,23 @@ void launchSequence(void *args){
 			if (misManager.missions[i].completed ||
 					/* This line stop the launching in case the spike got a mission but not need to be launch yet */
 			   (misManager.missions[i].assigned && !spikeData[misManager.missions[i].assigned_to].part_decision)) continue;
-			// the last && is determine the order of the launch to be by the spike number (not so smart) TODO: maybe change this for it to be more accurate
 			if (misManager.missions[i].assigned){
+				log_info("launching mission %d to spike %d", i, misManager.missions[i].assigned_to);
 				err = launch(misManager.missions[i].assigned_to);
 				if (err == NoError){
+					log_info("launching mission %d to spike %d completed successfully", i, misManager.missions[i].assigned_to);
 					completeInSuccess(&misManager, i);
 				}
 				else if (err == SpikeNotFreeAndElevUp){
+					log_critical("launching mission %d to spike %d failed, the elevator is up and the spike is not free", i, misManager.missions[i].assigned_to);
+					log_critical("Stoping the launch sequence and waiting for manual intervention");
 					// when the elevator stays up is a fatal error, we need to stop the launch sequence and wait for manual intervention
 					break;
 				}
 				else if (err == ElevStaysDown || err == SpikeNotFreeAndElevDown){
 					// when the elevator stays down is not a fatal error,
 					// we need to complete the mission in failure for it to be assigned to another spike
+					log_warning("launching mission %d to spike %d failed, the mission will assign to another spike", i, misManager.missions[i].assigned_to);
 					completeInFailure(&misManager, i);
 				}
 			}
