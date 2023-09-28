@@ -49,6 +49,7 @@ void Logger_Init(void){
 
     /* Create a log file for the current running */
     lfs_file_open(&LFS, &curr_log_file, log_file_name, LFS_O_WRONLY | LFS_O_CREAT);
+    log_info("Log started with run number %d", log_counter);
 }
 
 void get_level(log_level_t level, char* ret){
@@ -72,7 +73,7 @@ void get_level(log_level_t level, char* ret){
 }
 
 
-void level_log(log_level_t level, const char *message, ...) {
+void level_log(log_level_t level, const char *message, va_list args) {
     /* Get the current time with HAL_GetTick() */
     uint32_t mstime = HAL_GetTick();
 
@@ -83,9 +84,6 @@ void level_log(log_level_t level, const char *message, ...) {
     char log_message[MAX_LOG_MESSAGE_SIZE];
     char level_str[10];
     get_level(level, level_str);
-
-    va_list args;
-    va_start(args, message);
 
     int chars_written = snprintf(log_message, MAX_LOG_MESSAGE_SIZE, "[%f] %s: ", seconds, level_str);
     if (chars_written < 0 || chars_written >= MAX_LOG_MESSAGE_SIZE) {
@@ -142,14 +140,16 @@ int read_log(char* buff, uint32_t size, uint32_t log_counter){
     char log_file_name[MAX_LOG_FILE_NAME] = {0};
     sprintf(log_file_name, "/run_%lu.log", log_counter);
 
-    int ret = lfs_file_open(&LFS, &curr_log_file, log_file_name, LFS_O_RDONLY);
+    lfs_file_t read_file;
+
+    int ret = lfs_file_open(&LFS, &read_file, log_file_name, LFS_O_RDONLY);
 
     if (ret < LFS_ERR_OK){
         return ret;
     }
 
-    int size_read = lfs_file_read(&LFS, &curr_log_file, buff, size);
-    lfs_file_close(&LFS, &curr_log_file);
+    int size_read = lfs_file_read(&LFS, &read_file, buff, size);
+    lfs_file_close(&LFS, &read_file);
     buff[size_read] = '\0';
     return size_read;
 }
@@ -179,6 +179,10 @@ int list_log_files(char *buff, uint32_t size){
 
     lfs_dir_close(&LFS, &dir);
     return size_read;
+}
+
+int logger_sync(){
+	return lfs_file_sync(&LFS, &curr_log_file);
 }
 
 void logger_test(void){

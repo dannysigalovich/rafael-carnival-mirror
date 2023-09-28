@@ -45,4 +45,6 @@ int list_log_files(char *buff, uint32_t size);
 
 int read_log(char* buff, uint32_t size, uint32_t log_counter);
 
+int logger_sync();
+
 #endif /* LOGGER_LOGGER_H */

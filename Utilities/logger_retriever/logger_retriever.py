@@ -44,6 +44,8 @@ def smart_recv(sock, pkt_kind):
             elif pkt_kind == 'log':
                 global pkt_log
                 pkt_log = pkt.decode()
+                print("\nLog received:")
+                print(pkt_log)
             return
         except socket.timeout:
             if not is_running:
@@ -104,7 +106,10 @@ while pkt_list is None:
     sleep(0.5)
 available_logs = pkt_list.split('\n')
 
-
+# srot the logs by the log number
+if available_logs[-1] == '':
+    available_logs.pop()
+    available_logs.sort(key=lambda x: int(x.split('_')[1].split('.')[0]))
 print("Available logs:")
 for i, log in enumerate(available_logs):
     if log == '' and i == 0:
@@ -112,18 +117,19 @@ for i, log in enumerate(available_logs):
         exit(1)
     if log == '':
         continue
-    print(f"{i + 1}. {log}")
+    print(f"{i}. {log}")
 
 # Step 3: Wait for user input to select a log
-selected_log_index = int(input("Enter the number of the log you want to retrieve: ")) - 1
+selected_log_index = int(input("Enter the number of the log you want to retrieve: "))
 
 selected_log_name = available_logs[selected_log_index]
 
 # Step 4: Send the selected log request
 # Define the struct format
-struct_format = "5s21s"  # 5 bytes for sync and 21 bytes for the word
-selected_log_request = b"REQUEST_LOG" + selected_log_index.to_bytes(4, 'little')
-selected_log_request_pkt = struct.pack(struct_format, sync, selected_log_request)
+# 5 bytes for sync and 21 bytes for the word and 4 for int
+struct_format = "5s11sI"
+selected_log_request = b"REQUEST_LOG"
+selected_log_request_pkt = struct.pack(struct_format, sync, selected_log_request, selected_log_index)
 
 udp_socket.sendto(selected_log_request_pkt, (UDP_SERVER_ADDRESS, UDP_SERVER_PORT))
 sock_second_lock.release() # release the lock for the thread to use the socket later

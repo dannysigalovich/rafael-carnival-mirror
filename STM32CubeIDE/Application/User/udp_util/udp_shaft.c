@@ -190,12 +190,14 @@ void parse_packet(struct pbuf *pbuf, const ip_addr_t *addr, u16_t port){
 		  writeToBuff(&INSPVAXBuff,pbuf->payload , sizeof(INSPVAX));
     }
     else if (log_req_sync_check(pbuf)){
+      logger_sync();
       send_flag.send_log = true;
-      send_flag.req_log_count = *(uint32_t *)(((uint8_t *)pbuf->payload) + SYNC_SIZE + sizeof(REQ_LOG));
+      send_flag.req_log_count = *(uint32_t *)(pbuf->payload + SYNC_SIZE + strlen(REQ_LOG)); // + 1 for the \0
       send_flag.port = port;
       memcpy(&send_flag.addr, addr, sizeof(ip_addr_t));
     }
     else if (log_list_req_sync_check(pbuf)){
+      logger_sync();
       send_flag.send_log_list = true;
       send_flag.port = port;
       memcpy(&send_flag.addr, addr, sizeof(ip_addr_t));
