@@ -67,6 +67,9 @@
 #define SPIKE4_DISC_DOWN_PIN 	GPIO_PIN_13
 #define SPIKE4_DISC_GPIO_GROUP 	GPIOD
 
+#define LAUNCH_MASTER_PIN		GPIO_PIN_2
+#define LAUNCH_MASTER_GROUP		GPIOG
+
 
 
 
@@ -89,6 +92,8 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin);
 
 
 uint8_t is_power_on();
+
+uint8_t is_launch_master();
 
 void power_on_realy();
 
