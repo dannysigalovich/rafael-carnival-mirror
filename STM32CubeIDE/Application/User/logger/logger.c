@@ -39,6 +39,9 @@ uint32_t inc_log(void){
 }
 
 void Logger_Init(void){
+
+#ifdef LOGGER_ON
+
     /* The fsi init will config the littlefs with our flash and mount a rootfs for us */
     fsi_init(&DEFAULT_FSI_CONFIGURATION);
 
@@ -50,6 +53,10 @@ void Logger_Init(void){
     /* Create a log file for the current running */
     lfs_file_open(&LFS, &curr_log_file, log_file_name, LFS_O_WRONLY | LFS_O_CREAT);
     log_info("Log started with run number %d", log_counter);
+
+
+#endif
+
 }
 
 void get_level(log_level_t level, char* ret){
@@ -74,6 +81,7 @@ void get_level(log_level_t level, char* ret){
 
 
 void level_log(log_level_t level, const char *message, va_list args) {
+
     /* Get the current time with HAL_GetTick() */
     uint32_t mstime = HAL_GetTick();
 
@@ -99,42 +107,58 @@ void level_log(log_level_t level, const char *message, va_list args) {
     va_end(args);
 
     lfs_file_write(&LFS, &curr_log_file, log_message, strlen(log_message));
+
 }
 
 void log_info(const char *message, ...) {
+#ifdef LOGGER_ON
     va_list args;
     va_start(args, message);
     level_log(LOG_INFO, message, args);
     va_end(args);
+#endif
 }
 
 void log_warning(const char *message, ...) {
+#ifdef LOGGER_ON
     va_list args;
     va_start(args, message);
     level_log(LOG_WARNING, message, args);
     va_end(args);
+#endif
 }
 
 void log_error(const char *message, ...) {
+#ifdef LOGGER_ON
     va_list args;
     va_start(args, message);
     level_log(LOG_ERROR, message, args);
     va_end(args);
+#endif
 }
 
 void log_critical(const char *message, ...) {
+#ifdef LOGGER_ON
     va_list args;
     va_start(args, message);
     level_log(LOG_CRITICAL, message, args);
     va_end(args);
+#endif
 }
 
 void close_logger(void){
+
+#ifdef LOGGER_ON
+
     /* Close the file */
     lfs_file_close(&LFS, &curr_log_file);
+
+#endif
 }
 
 int read_log(char* buff, uint32_t size, uint32_t log_counter){
+
+#ifdef LOGGER_ON
     /* Read the file */
 
     char log_file_name[MAX_LOG_FILE_NAME] = {0};
@@ -152,9 +176,15 @@ int read_log(char* buff, uint32_t size, uint32_t log_counter){
     lfs_file_close(&LFS, &read_file);
     buff[size_read] = '\0';
     return size_read;
+#else
+    return 0;
+#endif
+
 }
 
 int list_log_files(char *buff, uint32_t size){
+
+#ifdef LOGGER_ON
     /* List all the log files */
     lfs_dir_t dir;
     lfs_dir_open(&LFS, &dir, "/");
@@ -179,19 +209,27 @@ int list_log_files(char *buff, uint32_t size){
 
     lfs_dir_close(&LFS, &dir);
     return size_read;
+
+#else
+    return 0;
+#endif
 }
 
 int logger_sync(){
+#ifdef LOGGER_ON
 	return lfs_file_sync(&LFS, &curr_log_file);
+#else
+	return 0;
+#endif
 }
 
 void logger_test(void){
-
+#ifdef LOGGER_ON
     log_info("This is a test log message");
     log_warning("This is a test log message");
     log_error("This is a test log message");
     log_critical("This is a test log message");
 
     close_logger();
-	
+#endif
 }

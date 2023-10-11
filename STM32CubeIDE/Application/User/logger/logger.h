@@ -18,6 +18,8 @@
 #define REQ_LOG "REQUEST_LOG"
 #define REQ_LOG_LIST "REQUEST_LIST_LOGS"
 
+//#define LOGGER_ON
+
 
 typedef enum {
     LOG_INFO,
