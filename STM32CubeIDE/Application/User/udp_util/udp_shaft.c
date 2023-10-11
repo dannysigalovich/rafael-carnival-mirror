@@ -103,13 +103,14 @@ void udp_shaft_thread(void* arg)
       udp_remove(upcb);
     }
   }
-
+#ifdef LOGGER_ON
   send_pcb = udp_new();
   if (send_pcb){
     while(1){
       handle_send(send_pcb);
     }
   }
+#endif
 
   while(1){ /* in case the send pcb failed to create */
     sys_msleep(5); /* for the cpu to not get stuck */

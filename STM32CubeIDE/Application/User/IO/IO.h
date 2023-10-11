@@ -70,6 +70,8 @@
 #define LAUNCH_MASTER_PIN		GPIO_PIN_2
 #define LAUNCH_MASTER_GROUP		GPIOG
 
+#define LAUNCH_SLAVE_PIN		GPIO_PIN_0
+#define LAUNCH_SLAVE_GROUP		GPIOG
 
 
 
@@ -90,6 +92,7 @@ void startLaunchSequence();
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin);
 
+void MasterToSlaveLaunch();
 
 uint8_t is_power_on();
 
