@@ -11,6 +11,7 @@
 
 #define MAX_WORDS 2
 #define MAX_SECRET_SIZE 16
+#define MAX_SPIKES 4
 #define MISSIONS_HEADER_SIZE 5
 #define SECURE_LAUNCH 135
 #define ELEV_GO_UP_STATUS 20
@@ -107,5 +108,13 @@ typedef struct PACKED SecretCmd {
 	unsigned char secret2[MAX_SECRET_SIZE];
 	unsigned char cs;
 } SecretCmd;
+
+typedef struct PACKED LiveLog{ // send over udp when asked for
+	unsigned int bit_status[MAX_SPIKES];
+	unsigned char batteryPercentage[MAX_SPIKES];
+	unsigned char isReadyToLaunch[MAX_SPIKES];
+	char elevGoUp[MAX_SPIKES];
+	char elevIsUp[MAX_SPIKES];
+} LiveLog;
 
 #endif /* APPLICATION_USER_ICD_ICD_H_ */

@@ -16,6 +16,7 @@
 #define MAX_LOG_FILE_SIZE 4096
 
 #define REQ_LOG "REQUEST_LOG"
+#define LIVE_LOG "LIVE_LOG"
 #define REQ_LOG_LIST "REQUEST_LIST_LOGS"
 
 //#define LOGGER_ON

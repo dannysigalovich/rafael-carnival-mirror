@@ -30,7 +30,6 @@
 #define I2C_TIMING_400KHZ      			0x00901954
 #define I2C_TIMING_100KHZ 				0x10707DBC
 #define I2C_HANDLE_THREAD_PRIO    		( osPriorityNormal )
-#define MAX_SPIKES 4
 
 typedef struct SpikeTaskData{
    I2C_HandleTypeDef I2cHandle; /* I2C handler declaration */
