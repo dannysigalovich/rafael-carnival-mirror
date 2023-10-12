@@ -110,7 +110,7 @@ typedef struct PACKED SecretCmd {
 } SecretCmd;
 
 typedef struct PACKED LiveLog{ // send over udp when asked for
-	unsigned int bit_status[MAX_SPIKES];
+	unsigned int BITStatus[MAX_SPIKES];
 	unsigned char batteryPercentage[MAX_SPIKES];
 	unsigned char isReadyToLaunch[MAX_SPIKES];
 	char elevGoUp[MAX_SPIKES];

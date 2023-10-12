@@ -129,6 +129,14 @@ int build_live_log(char *buff, uint32_t size){
 		return -1;
 
 	LiveLog live = {0};
+	for (int i = 0; i < MAX_SPIKES; ++i){
+		live.batteryPercentage[i] = spikeData[i].currStatus.batteryPercentage;
+		live.BITStatus[i] = spikeData[i].currStatus.BITStatus;
+		live.isReadyToLaunch[i] = spikeData[i].currStatus.isReadyToLaunch;
+		live.elevGoUp[i] = spikeData[i].elevGoUp;
+		live.elevIsUp[i] = spikeData[i].elevGoUp;
+	}
+
 	memcpy(buff, &live, sizeof(LiveLog));
 
 	return sizeof(LiveLog);
