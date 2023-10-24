@@ -18,7 +18,7 @@
 #define ELEV_ACTION_WAIT 15000 /* time to wait when the elevator is up until we pull the elevator down again (wait x sec in the state machine) */
 #define MAX_SPIKE		 4
 
-#define UP_DOWN_LOGIC_LEVEL 0 /* 0 = pull down, 1 = pull up */
+#define UP_DOWN_LOGIC_LEVEL 1 /* 0 = pull down, 1 = pull up */
 
 #define POWER_ON_IN_GPIO_PIN	GPIO_PIN_6
 #define POWER_ON_OUT_GPIO_PIN	GPIO_PIN_8
@@ -67,6 +67,11 @@
 #define SPIKE4_DISC_DOWN_PIN 	GPIO_PIN_13
 #define SPIKE4_DISC_GPIO_GROUP 	GPIOD
 
+#define LAUNCH_MASTER_PIN		GPIO_PIN_2
+#define LAUNCH_MASTER_GROUP		GPIOG
+
+#define LAUNCH_SLAVE_PIN		GPIO_PIN_0
+#define LAUNCH_SLAVE_GROUP		GPIOG
 
 
 
@@ -87,8 +92,11 @@ void startLaunchSequence();
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin);
 
+void MasterToSlaveLaunch();
 
 uint8_t is_power_on();
+
+uint8_t is_launch_master();
 
 void power_on_realy();
 

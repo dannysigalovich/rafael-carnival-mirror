@@ -120,12 +120,19 @@ void GPIO_Config(void){
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(POWER_ON_GPIO_GROUP, POWER_ON_OUT_GPIO_PIN, GPIO_PIN_RESET);
   HAL_GPIO_WritePin(ELEV_SAFE_GPIO_GROUP, ELEV_SAFE_GPIO_PIN, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(LAUNCH_SLAVE_GROUP, LAUNCH_SLAVE_PIN, GPIO_PIN_SET);
 
   /*Configure GPIO pin : LAUNCH_GPIO pin pf7 */
   GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   GPIO_InitStruct.Pin = LAUNCH_GPIO_PIN;
   HAL_GPIO_Init(LAUNCH_GPIO_GROUP, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : POWER_ON_IN_GPIO_PIN */
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  GPIO_InitStruct.Pin = LAUNCH_MASTER_PIN;
+  HAL_GPIO_Init(LAUNCH_MASTER_GROUP, &GPIO_InitStruct);
 
   /*Configure GPIO pin : POWER_ON_IN_GPIO_PIN */
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
@@ -140,12 +147,20 @@ void GPIO_Config(void){
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(POWER_ON_GPIO_GROUP, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : POWER_ON_OUT_GPIO_PIN */
+  /*Configure GPIO pin : ELEV_SAFE_GPIO_PIN */
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Pin = ELEV_SAFE_GPIO_PIN;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(ELEV_SAFE_GPIO_GROUP, &GPIO_InitStruct);
+
+
+  /*Configure GPIO pin : ELEV_SAFE_GPIO_PIN */
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Pin = LAUNCH_SLAVE_PIN;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(LAUNCH_SLAVE_GROUP, &GPIO_InitStruct);
 
 
   config_elev_GPIO();

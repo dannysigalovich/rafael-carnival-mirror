@@ -125,6 +125,14 @@ uint8_t isLaunchSwitchOn(){
 	return isLaunchStarted;
 }
 
+uint8_t is_launch_master(){
+	return !HAL_GPIO_ReadPin(LAUNCH_MASTER_GROUP, LAUNCH_MASTER_PIN);
+}
+
+void MasterToSlaveLaunch(){
+	HAL_GPIO_WritePin(LAUNCH_SLAVE_GROUP, LAUNCH_SLAVE_PIN, 0);
+}
+
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
   if (GPIO_Pin == LAUNCH_GPIO_PIN){

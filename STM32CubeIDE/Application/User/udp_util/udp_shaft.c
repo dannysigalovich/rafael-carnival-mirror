@@ -13,6 +13,7 @@
 #include "lwip/tcp.h"
 #include <string.h>
 #include <stdio.h>
+#include "I2C/i2c_config.h"
 #include "Novatel/navMesseging.h"
 #include "INSBuffer/cyBuff.h"
 #include "udp_conf.h"
@@ -29,18 +30,23 @@
 #define check_sync(sync) (sync[0] == 0xAA && sync[1] == 0xBB && sync[2] == 0xCC && sync[3] == 0xDD && sync[4] == 0xEE)
 
 /* Private variables ---------------------------------------------------------*/
+
+extern SpikeTaskData spikeData[MAX_SPIKES];
+
 CircularBuffer INSPVAXBuff;
 
 MissionManager misManager;
 char secret_words[2][MAX_SECRET_SIZE];
 
 struct send_flag{
-  ip_addr_t addr;
-  u16_t port;
-  bool send_log;
-  uint32_t req_log_count; /* The requested log file */
-  bool send_log_list;
+	ip_addr_t addr;
+	u16_t port;
+	bool send_log;
+	uint32_t req_log_count; /* The requested log file */
+	bool send_log_list;
+	bool send_live;
 } send_flag = {0};
+
 
 /* Private function prototypes -----------------------------------------------*/
 void udp_receive_callback(void *arg, struct udp_pcb *upcb, struct pbuf *p, const ip_addr_t *addr, u16_t port);
@@ -84,7 +90,7 @@ void init_udp_broker(){
   */
 void udp_shaft_thread(void* arg)
 {
-  struct udp_pcb *upcb, *send_pcb;
+  struct udp_pcb *upcb;
   err_t err;
 
   /* Create a new UDP control block  */
@@ -103,11 +109,12 @@ void udp_shaft_thread(void* arg)
       udp_remove(upcb);
     }
   }
-
+  struct udp_pcb *send_pcb;
   send_pcb = udp_new();
   if (send_pcb){
     while(1){
       handle_send(send_pcb);
+      sys_msleep(5); /* for the cpu to not get stuck */
     }
   }
 
@@ -116,14 +123,34 @@ void udp_shaft_thread(void* arg)
   }
 }
 
+int build_live_log(char *buff, uint32_t size){
+
+	if (size < sizeof(LiveLog))
+		return -1;
+
+	LiveLog live = {0};
+	for (int i = 0; i < MAX_SPIKES; ++i){
+		live.batteryPercentage[i] = spikeData[i].currStatus.batteryPercentage;
+		live.BITStatus[i] = spikeData[i].currStatus.BITStatus;
+		live.isReadyToLaunch[i] = spikeData[i].currStatus.isReadyToLaunch;
+		live.elevGoUp[i] = spikeData[i].elevGoUp;
+		live.elevIsUp[i] = spikeData[i].elevGoUp;
+	}
+
+	memcpy(buff, &live, sizeof(LiveLog));
+
+	return sizeof(LiveLog);
+}
+
 void handle_send(struct udp_pcb *send_pcb){
   
-  if (send_flag.send_log_list || send_flag.send_log){
+  if (send_flag.send_log_list || send_flag.send_log || send_flag.send_live){
     /* allocate pbuf from RAM*/
 
 	  char buff[MAX_LOG_FILE_SIZE] = {0};
 
-	  int size = send_flag.send_log ? read_log(buff, MAX_LOG_FILE_SIZE, send_flag.req_log_count) : list_log_files(buff, MAX_LOG_FILE_SIZE);
+	  int size =  send_flag.send_live ? build_live_log(buff, MAX_LOG_FILE_SIZE) :
+			  	  send_flag.send_log ? read_log(buff, MAX_LOG_FILE_SIZE, send_flag.req_log_count) : list_log_files(buff, MAX_LOG_FILE_SIZE);
 
 	  if (size < 0) return;
 
@@ -141,10 +168,9 @@ void handle_send(struct udp_pcb *send_pcb){
 	  if (send_flag.send_log){ // reset the flag we just take care of
 		send_flag.send_log = false;
 	  }
-	  else{
+	  else if (send_flag.send_log_list){
 		send_flag.send_log_list = false;
 	  }
-
   }
 }
 
@@ -171,8 +197,8 @@ uint8_t log_req_sync_check(struct pbuf *pbuf){
     return 0;
   }
   uint8_t *sync = pbuf->payload;
-  bool bla = strncmp((char*)sync + SYNC_SIZE, REQ_LOG, strlen(REQ_LOG)) == 0;
-  return check_sync(sync) && bla;
+  bool part = strncmp((char*)sync + SYNC_SIZE, REQ_LOG, strlen(REQ_LOG)) == 0;
+  return check_sync(sync) && part;
 }
 
 uint8_t log_list_req_sync_check(struct pbuf *pbuf){
@@ -181,6 +207,15 @@ uint8_t log_list_req_sync_check(struct pbuf *pbuf){
   }
   uint8_t *sync = pbuf->payload;
   return check_sync(sync) && strncmp((char*)sync + SYNC_SIZE, REQ_LOG_LIST, strlen(REQ_LOG_LIST)) == 0;
+}
+
+uint8_t live_req_sync_check(struct pbuf *pbuf){
+  if (pbuf->len < SYNC_SIZE + sizeof(LIVE_LOG)){
+    return 0;
+  }
+  uint8_t *sync = pbuf->payload;
+  bool part = strncmp((char*)sync + SYNC_SIZE, LIVE_LOG, strlen(LIVE_LOG)) == 0;
+  return check_sync(sync) && part;
 }
 
 
@@ -201,6 +236,11 @@ void parse_packet(struct pbuf *pbuf, const ip_addr_t *addr, u16_t port){
       send_flag.send_log_list = true;
       send_flag.port = port;
       memcpy(&send_flag.addr, addr, sizeof(ip_addr_t));
+    }
+    else if (live_req_sync_check(pbuf)){
+      send_flag.send_live = true;
+	  send_flag.port = port;
+	  memcpy(&send_flag.addr, addr, sizeof(ip_addr_t));
     }
     else if (missions_sync_check(pbuf)){ /* the missions must be at the end */
     	Mission missions[MAX_MISSIONS] = {0};
