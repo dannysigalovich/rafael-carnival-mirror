@@ -54,7 +54,7 @@ extern uint32_t SystemCoreClock;
 #define configMAX_PRIORITIES (7)
 #define configMINIMAL_STACK_SIZE ((uint16_t)128)
 #if defined(__GNUC__)
-#define configTOTAL_HEAP_SIZE ((size_t)(50 * 1024))
+#define configTOTAL_HEAP_SIZE ((size_t)(60 * 1024))
 #else
 #define configTOTAL_HEAP_SIZE ((size_t)(30 * 1024))
 #endif
