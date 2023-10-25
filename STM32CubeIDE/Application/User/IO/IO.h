@@ -10,6 +10,8 @@
 
 #include "main.h"
 #include "lwip/sys.h"
+#include "udp_util/udp_ICD.h"
+#include "I2C/i2c_config.h"
 
 #define LAUNCH_SEQ_THREAD_PRIO	( osPriorityNormal )
 
@@ -19,6 +21,7 @@
 #define MAX_SPIKE		 4
 
 #define UP_DOWN_LOGIC_LEVEL 1 /* 0 = pull down, 1 = pull up */
+#define SPIKE_PWR_LOGIC_LEVEL 1 /* 0 = pull down, 1 = pull up */
 
 #define POWER_ON_IN_GPIO_PIN	GPIO_PIN_6
 #define POWER_ON_OUT_GPIO_PIN	GPIO_PIN_8
@@ -102,5 +105,9 @@ void elev_down(uint8_t spike_num);
 uint8_t is_spike_up(uint8_t spike_num);
 
 uint8_t is_spike_mid(uint8_t spike_num);
+
+void turn_on_BNET(uint8_t bnet_num);
+
+void turn_on_spike(uint8_t spike_num);
 
 #endif /* APPLICATION_USER_IO_IO_H_ */

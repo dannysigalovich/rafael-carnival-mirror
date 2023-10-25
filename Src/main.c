@@ -66,21 +66,11 @@ int main(void)
   /* Configure the system clock to 400 MHz */
   SystemClock_Config();
 
-  /* Configure the LCD ...*/
   BSP_Config();
-
-#ifdef TREGO_DEBUG
-  MX_USART2_UART_Init();
-  printPrompt();
-#endif
 
   GPIO_Config();
 
   Logger_Init();
-
-//  while(!is_power_on());
-//  power_on_realy();
-
 
   I2C_Init();
 
@@ -363,11 +353,6 @@ int getSpikeNumber(TaskHandle_t handle){
 	}
 	return -1;
 }
-
-void printPrompt() {
-	printf("\r\n\r\n");
-}
-
 
 #ifdef USE_FULL_ASSERT
 

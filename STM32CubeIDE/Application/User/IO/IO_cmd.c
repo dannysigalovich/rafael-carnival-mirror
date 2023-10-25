@@ -22,6 +22,9 @@
 
 
 uint8_t isLaunchStarted = 0;
+extern SpikeTaskData spikeData[MAX_SPIKES];
+
+
 
 void elev_up(uint8_t spike_num){
 	switch(spike_num){
@@ -57,6 +60,39 @@ void elev_down(uint8_t spike_num){
 		break;
 	}
 
+}
+
+void turn_on_spike(uint8_t spike_num){
+
+	switch(spike_num){
+	case 0:
+		HAL_GPIO_WritePin(SPIKE1_DISC_GPIO_GROUP, SPIKE1_PWR_PIN, SPIKE_PWR_LOGIC_LEVEL);
+		break;
+	case 1:
+		HAL_GPIO_WritePin(SPIKE2_PWR_GPIO_GROUP, SPIKE2_PWR_PIN, SPIKE_PWR_LOGIC_LEVEL);
+		break;
+	case 2:
+		HAL_GPIO_WritePin(SPIKE3_DISC_GPIO_GROUP, SPIKE3_PWR_PIN, SPIKE_PWR_LOGIC_LEVEL);
+		break;
+	case 3:
+		HAL_GPIO_WritePin(SPIKE4_DISC_GPIO_GROUP, SPIKE4_PWR_PIN, SPIKE_PWR_LOGIC_LEVEL);
+		break;
+	default:
+		return;
+	}
+	spikeData[spike_num].initState = SpikeRelayStarted;
+}
+
+void turn_on_BNET(uint8_t bnet_num){
+
+	switch (bnet_num){
+	case 0:
+		HAL_GPIO_WritePin(SPIKE_1_GPIO_GROUP, BNET1_PWR_GPIO_PIN, SPIKE_PWR_LOGIC_LEVEL);
+		break;
+	case 1:
+		HAL_GPIO_WritePin(SPIKE_2_GPIO_GROUP, BNET2_PWR_GPIO_PIN, SPIKE_PWR_LOGIC_LEVEL);
+		break;
+	}
 }
 
 uint8_t is_spike_up(uint8_t spike_num){

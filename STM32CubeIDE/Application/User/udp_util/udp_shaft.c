@@ -22,6 +22,7 @@
 #include "missionManager/missionManager.h"
 #include "logger/logger.h"
 #include "udp_ICD.h"
+#include "IO/IO.h"
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
@@ -230,7 +231,7 @@ void parse_packet(struct pbuf *pbuf, const ip_addr_t *addr, u16_t port){
           ((BeehiveSetUpData *)(packet->data))->existing_spikes[i] == Init && 
             spikeData[i].initState == NoInit ? spikeData[i].initState = Init : 0;
           I2C_start_listen(i);
-          //TODO: turn on Spike relay and set the spikeData[i].initState = SpikeRelayStarted
+          turn_on_spike(i);
           // Spike is initialized successfully
           spikeData[i].initState = spikeData[i].initState == SpikeRelayStarted ? Done : spikeData[i].initState;
         }
