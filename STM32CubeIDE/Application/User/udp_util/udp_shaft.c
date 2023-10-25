@@ -38,6 +38,7 @@
 /* Private variables ---------------------------------------------------------*/
 
 extern SpikeTaskData spikeData[MAX_SPIKES];
+extern uint8_t isLaunchStarted;
 char secret_words[2][MAX_SECRET_SIZE];
 CircularBuffer INSPVAXBuff;
 MissionManager misManager;
@@ -195,6 +196,24 @@ uint8_t INS_sync_check(struct pbuf *pbuf){
 	return ret && sync[0] == 0xAA && sync[1] == 0x44 && sync[2] == 0x12 && header->msgID == INSPVAXType;
 }
 
+void beehive_setUp(BeehiveSetUpData *data){
+
+  for (int i = 0; i < MAX_SPIKES; ++i){
+    if (data->existing_spikes[i] == Init && spikeData[i].initState == NoInit){
+      spikeData[i].initState = Init;
+      I2C_start_listen(i);
+      turn_on_spike(i);
+      spikeData[i].initState = spikeData[i].initState == SpikeRelayStarted ?
+                               Done : spikeData[i].initState;
+    }
+  }
+  for (int i = 0; i < MAX_BNET; ++i){
+    if (data->existing_BNET[i] == Init){
+      turn_on_BNET(i);
+    }
+  }
+}
+
 void parse_packet(struct pbuf *pbuf, const ip_addr_t *addr, u16_t port){
 
     if(INS_sync_check(pbuf)){
@@ -227,15 +246,11 @@ void parse_packet(struct pbuf *pbuf, const ip_addr_t *addr, u16_t port){
         send_flag.send_live = false;
     		break;
       case BeehiveSetUp:
-        for (int i = 0; i < MAX_SPIKES; ++i){
-          ((BeehiveSetUpData *)(packet->data))->existing_spikes[i] == Init && 
-            spikeData[i].initState == NoInit ? spikeData[i].initState = Init : 0;
-          I2C_start_listen(i);
-          turn_on_spike(i);
-          // Spike is initialized successfully
-          spikeData[i].initState = spikeData[i].initState == SpikeRelayStarted ? Done : spikeData[i].initState;
-        }
-        break; 
+    	  beehive_setUp((BeehiveSetUpData *)packet->data);
+        break;
+      case LaunchReq:
+    	  isLaunchStarted = true;
+    	  break;
       default:
         break;
     }

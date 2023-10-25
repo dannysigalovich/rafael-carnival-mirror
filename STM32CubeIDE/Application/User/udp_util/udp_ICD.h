@@ -14,6 +14,7 @@
 #define SYNC_STR "\xAA\xBB\xCC\xDD\xEE"
 #define MAX_UDP_PACKET_SIZE 1024
 #define MAX_UDP_DATA_SIZE (MAX_UDP_PACKET_SIZE - SYNC_SIZE - 1) // the -1 is for the msg type
+#define MAX_BNET 2
 
 #define CONSTRUCT_SYNC(sync) \
     do { \
@@ -32,8 +33,9 @@ typedef enum UdpMsgType{
     LiveLogStopReq = 4,
     BeehiveSetUp = 5,
     LiveLogResp = 6,
-    LogListResp = 7,
-    LogFileResp = 8,
+    LogListResp = 7, // not Relevant
+    LogFileResp = 8, // not Relevant
+	LaunchReq = 9
 } MsgType;
 
 
@@ -46,6 +48,7 @@ typedef struct PACKED UdpPacket{
 
 typedef struct PACKED BeehiveSetUpData{
     uint8_t existing_spikes[MAX_SPIKES]; // those are the spikes that are (1 - exist, 0 - not) in the beehive and should turn on
+    uint8_t existing_BNET[MAX_BNET]; // those are the BNET we should enable
 } BeehiveSetUpData;
 
 
