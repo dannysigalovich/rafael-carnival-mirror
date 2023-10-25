@@ -32,7 +32,7 @@ LaunchError launch(uint8_t spike){
 	}
 
 	if (status == ElevStaysDown){
-		elev_down(spike);
+//		elev_down(spike);
 		return ElevStaysDown;
 	}
 
@@ -41,7 +41,7 @@ LaunchError launch(uint8_t spike){
 	spikeData[spike].elevIsUp = true;
 	sys_msleep(ELEV_ACTION_WAIT);
 	spikeData[spike].elevIsUp = false;
-	elev_down(spike);
+//	elev_down(spike);
 
 
 //	if (is_spike_up(spike)){
@@ -92,7 +92,6 @@ uint8_t up, mid, down;
 void check_disc_with_buttons(uint8_t spike){
 	while (1){
 			up = is_spike_up(spike);
-			down = is_spike_down(spike);
 			mid = is_spike_mid(spike);
 	}
 }
