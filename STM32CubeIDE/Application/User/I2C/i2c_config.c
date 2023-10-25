@@ -17,16 +17,17 @@
 #include "logger/logger.h"
 
 SpikeTaskData spikeData[MAX_SPIKES] = {0};
+char *spikeTaskNames[MAX_SPIKES] = {"I2C_spike0", "I2C_spike1", "I2C_spike2", "I2C_spike3"};
 
 void I2Cx_Init(void *I2CInstance, I2C_HandleTypeDef *I2cHandle);
 void I2Cx_Refresh_Init(void *I2CInstance, I2C_HandleTypeDef *I2cHandle);
 
-void I2C_start_listen(){
-  log_info("I2C start listen - 4 spikes");
-  sys_thread_new("I2C_spike0", ICD_handle, spikeData, DEFAULT_THREAD_STACKSIZE, I2C_HANDLE_THREAD_PRIO);
-  sys_thread_new("I2C_spike1", ICD_handle, spikeData + 1, DEFAULT_THREAD_STACKSIZE, I2C_HANDLE_THREAD_PRIO);
-  sys_thread_new("I2C_spike2", ICD_handle, spikeData + 2, DEFAULT_THREAD_STACKSIZE, I2C_HANDLE_THREAD_PRIO);
-  sys_thread_new("I2C_spike3", ICD_handle, spikeData + 3, DEFAULT_THREAD_STACKSIZE, I2C_HANDLE_THREAD_PRIO);
+void I2C_start_listen(uint8_t spike_num){
+  if (spikeData[spike_num].initState != Init){
+    return;
+  }
+  sys_thread_new(spikeTaskNames[spike_num], ICD_handle, spikeData + spike_num, DEFAULT_THREAD_STACKSIZE, I2C_HANDLE_THREAD_PRIO);
+  spikeData[spike_num].initState = I2CListenStarted;
 }
 
 void I2C_Init(){

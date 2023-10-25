@@ -31,7 +31,16 @@
 #define I2C_TIMING_100KHZ 				0x10707DBC
 #define I2C_HANDLE_THREAD_PRIO    		( osPriorityNormal )
 
+typedef enum InitState{
+   NoInit,
+   Init,
+   I2CListenStarted,
+   SpikeRelayStarted,
+   Done
+} InitState;
+
 typedef struct SpikeTaskData{
+   InitState initState; // only regarding the I2C listen thread 
    I2C_HandleTypeDef I2cHandle; /* I2C handler declaration */
    uint8_t aTxBuffer[TXBUFFERSIZE]; /* Buffer used for transmission */
    uint8_t aRxBuffer[RXBUFFERSIZE]; /* Buffer used for reception */
@@ -49,7 +58,7 @@ void I2C_Init();
 
 void I2Cx_Refresh_Init(void *I2CInstance, I2C_HandleTypeDef *I2cHandle);
 
-void I2C_start_listen();
+void I2C_start_listen(uint8_t spike_num);
 
 void HAL_I2C_SlaveRxCpltCallback(I2C_HandleTypeDef *hi2c);
 

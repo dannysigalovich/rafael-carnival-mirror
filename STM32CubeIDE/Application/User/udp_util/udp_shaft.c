@@ -21,22 +21,25 @@
 #include "ICD/ICD.h"
 #include "missionManager/missionManager.h"
 #include "logger/logger.h"
+#include "udp_ICD.h"
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
+
+#define CPY_ADDR(ip, port) \
+    do { \
+        memcpy(&send_flag.addr, (ip), sizeof(ip_addr_t)); \
+        send_flag.port = (port); \
+    } while (0)
+
+
 /* Private macro -------------------------------------------------------------*/
-
-#define SYNC_SIZE 5
-#define check_sync(sync) (sync[0] == 0xAA && sync[1] == 0xBB && sync[2] == 0xCC && sync[3] == 0xDD && sync[4] == 0xEE)
-
 /* Private variables ---------------------------------------------------------*/
 
 extern SpikeTaskData spikeData[MAX_SPIKES];
-
-CircularBuffer INSPVAXBuff;
-
-MissionManager misManager;
 char secret_words[2][MAX_SECRET_SIZE];
+CircularBuffer INSPVAXBuff;
+MissionManager misManager;
 
 struct send_flag{
 	ip_addr_t addr;
@@ -109,8 +112,9 @@ void udp_shaft_thread(void* arg)
       udp_remove(upcb);
     }
   }
-  struct udp_pcb *send_pcb;
-  send_pcb = udp_new();
+
+  struct udp_pcb *send_pcb = udp_new();
+
   if (send_pcb){
     while(1){
       handle_send(send_pcb);
@@ -123,13 +127,14 @@ void udp_shaft_thread(void* arg)
   }
 }
 
-int build_live_log(char *buff, uint32_t size){
+int build_live_log(uint8_t *buff, uint32_t size){
 
 	if (size < sizeof(LiveLog))
 		return -1;
 
 	LiveLog live = {0};
 	for (int i = 0; i < MAX_SPIKES; ++i){
+		live.IsInitialized[i] = spikeData[i].initState;
 		live.batteryPercentage[i] = spikeData[i].currStatus.batteryPercentage;
 		live.BITStatus[i] = spikeData[i].currStatus.BITStatus;
 		live.isReadyToLaunch[i] = spikeData[i].currStatus.isReadyToLaunch;
@@ -144,111 +149,94 @@ int build_live_log(char *buff, uint32_t size){
 
 void handle_send(struct udp_pcb *send_pcb){
   
-  if (send_flag.send_log_list || send_flag.send_log || send_flag.send_live){
-    /* allocate pbuf from RAM*/
+  int size = 0;
+  UdpPacket packet;
+  CONSTRUCT_SYNC(packet.sync);
 
-	  char buff[MAX_LOG_FILE_SIZE] = {0};
-
-	  int size =  send_flag.send_live ? build_live_log(buff, MAX_LOG_FILE_SIZE) :
-			  	  send_flag.send_log ? read_log(buff, MAX_LOG_FILE_SIZE, send_flag.req_log_count) : list_log_files(buff, MAX_LOG_FILE_SIZE);
-
-	  if (size < 0) return;
-
-	  struct pbuf *p_tx = pbuf_alloc(PBUF_TRANSPORT, size, PBUF_RAM);
-
-	  if(p_tx == NULL) return;
-
-	  /* Copy the log file to the p_tx buffer */
-	  pbuf_take(p_tx, buff, size);
-
-	  udp_sendto(send_pcb, p_tx, &send_flag.addr, send_flag.port);
-	  /* Free the p_tx buffer */
-	  pbuf_free(p_tx);
-
-	  if (send_flag.send_log){ // reset the flag we just take care of
-		send_flag.send_log = false;
-	  }
-	  else if (send_flag.send_log_list){
-		send_flag.send_log_list = false;
-	  }
+  if (send_flag.send_live){
+    packet.msgType = LiveLogResp;
+    size = build_live_log(packet.data, MAX_UDP_DATA_SIZE);
   }
+  else if (send_flag.send_log){
+    packet.msgType = LogFileResp;
+    size = read_log((char *)packet.data, send_flag.req_log_count, MAX_UDP_DATA_SIZE);
+    send_flag.send_log = false;
+  }
+  else if (send_flag.send_log_list){
+    packet.msgType = LogListResp;
+    size = list_log_files((char *)packet.data, MAX_UDP_DATA_SIZE);
+    send_flag.send_log_list = false;
+  }
+  else{
+    return;
+  }
+
+
+  if (size < 0) return;
+
+  /* allocate pbuf from RAM*/
+  struct pbuf *p_tx = pbuf_alloc(PBUF_TRANSPORT, sizeof(UdpPacket), PBUF_RAM);
+  if(p_tx == NULL) return;
+
+  /* Copy the log file to the p_tx buffer */
+  pbuf_take(p_tx, &packet, sizeof(UdpPacket));
+
+  udp_sendto(send_pcb, p_tx, &send_flag.addr, send_flag.port);
+  /* Free the p_tx buffer */
+  pbuf_free(p_tx);
+
 }
 
 uint8_t INS_sync_check(struct pbuf *pbuf){
-
-  INS_header *header = pbuf->payload;
+	INS_header *header = pbuf->payload;
 	uint8_t *sync = header->sync;
-
 	uint8_t ret = pbuf->len == sizeof(INSPVAX); // check that we got a hole packet
-
 	return ret && sync[0] == 0xAA && sync[1] == 0x44 && sync[2] == 0x12 && header->msgID == INSPVAXType;
 }
-
-uint8_t missions_sync_check(struct pbuf *pbuf){
-  if (pbuf->len < SYNC_SIZE){
-    return 0;
-  }
-	uint8_t *sync = pbuf->payload;
-	return check_sync(sync);
-}
-
-uint8_t log_req_sync_check(struct pbuf *pbuf){
-  if (pbuf->len < SYNC_SIZE + sizeof(REQ_LOG)){
-    return 0;
-  }
-  uint8_t *sync = pbuf->payload;
-  bool part = strncmp((char*)sync + SYNC_SIZE, REQ_LOG, strlen(REQ_LOG)) == 0;
-  return check_sync(sync) && part;
-}
-
-uint8_t log_list_req_sync_check(struct pbuf *pbuf){
-  if (pbuf->len < SYNC_SIZE + sizeof(REQ_LOG_LIST)){
-    return 0;
-  }
-  uint8_t *sync = pbuf->payload;
-  return check_sync(sync) && strncmp((char*)sync + SYNC_SIZE, REQ_LOG_LIST, strlen(REQ_LOG_LIST)) == 0;
-}
-
-uint8_t live_req_sync_check(struct pbuf *pbuf){
-  if (pbuf->len < SYNC_SIZE + sizeof(LIVE_LOG)){
-    return 0;
-  }
-  uint8_t *sync = pbuf->payload;
-  bool part = strncmp((char*)sync + SYNC_SIZE, LIVE_LOG, strlen(LIVE_LOG)) == 0;
-  return check_sync(sync) && part;
-}
-
 
 void parse_packet(struct pbuf *pbuf, const ip_addr_t *addr, u16_t port){
 
     if(INS_sync_check(pbuf)){
 		  writeToBuff(&INSPVAXBuff,pbuf->payload , sizeof(INSPVAX));
     }
-    else if (log_req_sync_check(pbuf)){
-      logger_sync();
-      send_flag.send_log = true;
-      send_flag.req_log_count = *(uint32_t *)(pbuf->payload + SYNC_SIZE + strlen(REQ_LOG)); // + 1 for the \0
-      send_flag.port = port;
-      memcpy(&send_flag.addr, addr, sizeof(ip_addr_t));
-    }
-    else if (log_list_req_sync_check(pbuf)){
-      logger_sync();
-      send_flag.send_log_list = true;
-      send_flag.port = port;
-      memcpy(&send_flag.addr, addr, sizeof(ip_addr_t));
-    }
-    else if (live_req_sync_check(pbuf)){
-      send_flag.send_live = true;
-	  send_flag.port = port;
-	  memcpy(&send_flag.addr, addr, sizeof(ip_addr_t));
-    }
-    else if (missions_sync_check(pbuf)){ /* the missions must be at the end */
-    	Mission missions[MAX_MISSIONS] = {0};
-    	parse_missions(pbuf->payload + MISSIONS_HEADER_SIZE, missions, secret_words);
-    	setMissions(&misManager, missions);
-    }
-    else{
-      // error
+    else if (!SYNCHECK(pbuf->payload) || pbuf->len < SYNC_SIZE + 1) return; // check if the packet is valid
+
+    UdpPacket *packet = pbuf->payload;
+
+    switch (packet->msgType){
+    	case MissionsSecretJson:
+        Mission missions[MAX_MISSIONS] = {0};
+    	  parse_missions((const char* )(packet->data), missions, secret_words);
+    	  setMissions(&misManager, missions);
+    		break;
+    	case LogListReq:
+        send_flag.send_log_list = true;
+        CPY_ADDR(addr, port);
+    		break;
+    	case LogFileReq:
+        send_flag.send_log = true;
+        send_flag.req_log_count = ((uint32_t *)(packet->data))[0];
+        CPY_ADDR(addr, port);
+    		break;
+    	case LiveLogStartReq:
+        send_flag.send_live = true;
+        CPY_ADDR(addr, port);
+    		break;
+    	case LiveLogStopReq:
+        send_flag.send_live = false;
+    		break;
+      case BeehiveSetUp:
+        for (int i = 0; i < MAX_SPIKES; ++i){
+          ((BeehiveSetUpData *)(packet->data))->existing_spikes[i] == Init && 
+            spikeData[i].initState == NoInit ? spikeData[i].initState = Init : 0;
+          I2C_start_listen(i);
+          //TODO: turn on Spike relay and set the spikeData[i].initState = SpikeRelayStarted
+          // Spike is initialized successfully
+          spikeData[i].initState = spikeData[i].initState == SpikeRelayStarted ? Done : spikeData[i].initState;
+        }
+        break; 
+      default:
+        break;
     }
 }
 

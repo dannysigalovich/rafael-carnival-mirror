@@ -109,12 +109,4 @@ typedef struct PACKED SecretCmd {
 	unsigned char cs;
 } SecretCmd;
 
-typedef struct PACKED LiveLog{ // send over udp when asked for
-	unsigned int BITStatus[MAX_SPIKES];
-	unsigned char batteryPercentage[MAX_SPIKES];
-	unsigned char isReadyToLaunch[MAX_SPIKES];
-	char elevGoUp[MAX_SPIKES];
-	char elevIsUp[MAX_SPIKES];
-} LiveLog;
-
 #endif /* APPLICATION_USER_ICD_ICD_H_ */
