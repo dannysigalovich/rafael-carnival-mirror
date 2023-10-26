@@ -58,16 +58,6 @@ void udp_receive_callback(void *arg, struct udp_pcb *upcb, struct pbuf *p, const
 void udp_shaft_thread(void* arg);
 void handle_send(struct udp_pcb *send_pcb);
 
-void build_dummy_missions(){ // TODO:  remove when needed
-	Mission missions[MAX_MISSIONS];
-	for (int i = 0; i < MAX_MISSIONS; ++i){
-		missions[i].mission_number = i + 1;
-		missions[i].priority = i + 1;
-	}
-	setMissions(&misManager, missions);
-}
-
-
 /**
   * @brief  Initialize the udp connection and all the data structures it uses (Also start its thread)
   * @param  none
@@ -80,8 +70,6 @@ void init_udp_broker(){
 
 	memset(secret_words[0], 0, MAX_SECRET_SIZE);
 	memset(secret_words[1], 0, MAX_SECRET_SIZE);
-
-	build_dummy_missions();
 
 	sys_thread_new("udp_connection", udp_shaft_thread, NULL, UDP_THREAD_STACKSIZE, UDP_THREAD_PRIO);
 }
@@ -136,12 +124,16 @@ int build_live_log(uint8_t *buff, uint32_t size){
 
 	LiveLog live = {0};
 	for (int i = 0; i < MAX_SPIKES; ++i){
-		live.IsInitialized[i] = spikeData[i].initState;
+		live.isSpikeInitialized[i] = spikeData[i].initState;
 		live.batteryPercentage[i] = spikeData[i].currStatus.batteryPercentage;
 		live.BITStatus[i] = spikeData[i].currStatus.BITStatus;
 		live.isReadyToLaunch[i] = spikeData[i].currStatus.isReadyToLaunch;
 		live.elevGoUp[i] = spikeData[i].elevGoUp;
 		live.elevIsUp[i] = spikeData[i].elevGoUp;
+	}
+
+	for (int i = 0; i < MAX_BNET; ++i){
+		live.isBnetInitialized[i] = is_BNET_on(i);
 	}
 
 	memcpy(buff, &live, sizeof(LiveLog));
@@ -199,7 +191,7 @@ uint8_t INS_sync_check(struct pbuf *pbuf){
 void beehive_setUp(BeehiveSetUpData *data){
 
   for (int i = 0; i < MAX_SPIKES; ++i){
-    if (data->existing_spikes[i] == Init && spikeData[i].initState == NoInit){
+    if (data->turnOnSpikes[i] == Init && spikeData[i].initState == NoInit){
       spikeData[i].initState = Init;
       I2C_start_listen(i);
       turn_on_spike(i);
@@ -208,7 +200,7 @@ void beehive_setUp(BeehiveSetUpData *data){
     }
   }
   for (int i = 0; i < MAX_BNET; ++i){
-    if (data->existing_BNET[i] == Init){
+    if (data->turnOnBnet[i] == Init){
       turn_on_BNET(i);
     }
   }
@@ -224,10 +216,8 @@ void parse_packet(struct pbuf *pbuf, const ip_addr_t *addr, u16_t port){
     UdpPacket *packet = pbuf->payload;
 
     switch (packet->msgType){
-    	case MissionsSecretJson:
-        Mission missions[MAX_MISSIONS] = {0};
-    	  parse_missions((const char* )(packet->data), missions, secret_words);
-    	  setMissions(&misManager, missions);
+    	case MissionsSet:
+    	  setMissions(&misManager, (MissionsData *)packet->data);
     		break;
     	case LogListReq:
         send_flag.send_log_list = true;

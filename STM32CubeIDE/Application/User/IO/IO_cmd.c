@@ -7,19 +7,6 @@
 
 #include "IO.h"
 
-#define DOWN_PULL_ACTION(GPIO_GROUP, PIN) do { \
-    HAL_GPIO_WritePin(GPIO_GROUP, PIN, UP_DOWN_LOGIC_LEVEL); \
-    sys_msleep(UP_DOWN_PULL_TIME); \
-    HAL_GPIO_WritePin(GPIO_GROUP, PIN, !UP_DOWN_LOGIC_LEVEL); \
-} while (0)
-
-// TODO: replace UP_PULL_ACTION  with smart timeout (when defined by danny)
-#define UP_PULL_ACTION(GPIO_GROUP, PIN, SPIKE) do { \
-    HAL_GPIO_WritePin(GPIO_GROUP, PIN, UP_DOWN_LOGIC_LEVEL); \
-	while (!is_spike_up(SPIKE)); \
-    HAL_GPIO_WritePin(GPIO_GROUP, PIN, !UP_DOWN_LOGIC_LEVEL); \
-} while (0)
-
 
 uint8_t isLaunchStarted = 0;
 extern SpikeTaskData spikeData[MAX_SPIKES];
@@ -29,16 +16,16 @@ extern SpikeTaskData spikeData[MAX_SPIKES];
 void elev_up(uint8_t spike_num){
 	switch(spike_num){
 	case 0:
-		UP_PULL_ACTION(SPIKE_1_GPIO_GROUP, SPIKE_1_UP_GPIO_PIN, spike_num);
+		HAL_GPIO_WritePin(SPIKE_1_GPIO_GROUP, SPIKE_1_UP_GPIO_PIN, UP_DOWN_LOGIC_LEVEL);
 		break;
 	case 1:
-		UP_PULL_ACTION(SPIKE_2_GPIO_GROUP, SPIKE_2_UP_GPIO_PIN, spike_num);
+		HAL_GPIO_WritePin(SPIKE_2_GPIO_GROUP, SPIKE_2_UP_GPIO_PIN, UP_DOWN_LOGIC_LEVEL);
 		break;
 	case 2:
-		UP_PULL_ACTION(SPIKE_3_GPIO_GROUP, SPIKE_3_UP_GPIO_PIN, spike_num);
+		HAL_GPIO_WritePin(SPIKE_3_GPIO_GROUP, SPIKE_3_UP_GPIO_PIN, UP_DOWN_LOGIC_LEVEL);
 		break;
 	case 3:
-		UP_PULL_ACTION(SPIKE_4_GPIO_GROUP, SPIKE_4_UP_GPIO_PIN, spike_num);
+		HAL_GPIO_WritePin(SPIKE_4_GPIO_GROUP, SPIKE_4_UP_GPIO_PIN, UP_DOWN_LOGIC_LEVEL);
 		break;
 	}
 }
@@ -47,19 +34,18 @@ void elev_down(uint8_t spike_num){
 
 	switch(spike_num){
 	case 0:
-
+		HAL_GPIO_WritePin(SPIKE_1_GPIO_GROUP, SPIKE_1_UP_GPIO_PIN, !UP_DOWN_LOGIC_LEVEL);
 		break;
 	case 1:
-
+		HAL_GPIO_WritePin(SPIKE_2_GPIO_GROUP, SPIKE_1_UP_GPIO_PIN, !UP_DOWN_LOGIC_LEVEL);
 		break;
 	case 2:
-
+		HAL_GPIO_WritePin(SPIKE_3_GPIO_GROUP, SPIKE_1_UP_GPIO_PIN, !UP_DOWN_LOGIC_LEVEL);
 		break;
 	case 3:
-
+		HAL_GPIO_WritePin(SPIKE_4_GPIO_GROUP, SPIKE_1_UP_GPIO_PIN, !UP_DOWN_LOGIC_LEVEL);
 		break;
 	}
-
 }
 
 void turn_on_spike(uint8_t spike_num){
@@ -92,6 +78,17 @@ void turn_on_BNET(uint8_t bnet_num){
 	case 1:
 		HAL_GPIO_WritePin(SPIKE_2_GPIO_GROUP, BNET2_PWR_GPIO_PIN, SPIKE_PWR_LOGIC_LEVEL);
 		break;
+	}
+}
+
+uint8_t is_BNET_on(uint8_t bnet_num){
+	switch (bnet_num){
+	case 0:
+		return HAL_GPIO_ReadPin(SPIKE_1_GPIO_GROUP, BNET1_PWR_GPIO_PIN);
+	case 1:
+		return HAL_GPIO_ReadPin(SPIKE_2_GPIO_GROUP, BNET2_PWR_GPIO_PIN);
+	default:
+		return 0;
 	}
 }
 

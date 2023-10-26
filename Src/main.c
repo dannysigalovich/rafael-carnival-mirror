@@ -38,7 +38,6 @@ static void StartThread(void const *argument);
 static void Netif_Config(void);
 static void MPU_Config(void);
 static void CPU_CACHE_Enable(void);
-void printPrompt();
 
 
 /* Private functions ---------------------------------------------------------*/
@@ -134,6 +133,8 @@ static void Netif_Config(void)
   ip_addr_t ipaddr;
   ip_addr_t netmask;
   ip_addr_t gw;
+
+  uint8_t IP_ADDR3 = is_launch_master() ? 10U : 11U;
 
 #if LWIP_DHCP
   ip_addr_set_zero_ip4(&ipaddr);

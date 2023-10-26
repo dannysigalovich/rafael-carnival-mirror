@@ -36,7 +36,7 @@
 #define IP_ADDR0   ((uint8_t)192U)
 #define IP_ADDR1   ((uint8_t)168U)
 #define IP_ADDR2   ((uint8_t)1U)
-#define IP_ADDR3   ((uint8_t)10U)
+// #define IP_ADDR3   ((uint8_t)10U)  last version it was decalerd like this now is more dynamic (according to Master Launch)
 #define UDP_PORT	7
 
 /*NETMASK*/
@@ -52,6 +52,7 @@
 #define GW_ADDR3   ((uint8_t)1U)
 
 #define MAX_SPIKES	4
+#define MAX_MISSIONS 8
 
 /* Exported macro ------------------------------------------------------------*/
 #define COUNTOF(__BUFFER__)   (sizeof(__BUFFER__) / sizeof(*(__BUFFER__)))

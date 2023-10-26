@@ -13,8 +13,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <string.h>
-
-#define MAX_MISSIONS 4
+#include "udp_util/udp_ICD.h"
 
 typedef struct {
 	unsigned short mission_number;
@@ -35,7 +34,7 @@ typedef struct {
 
 
 void initializeMissionManager(MissionManager* manager);
-void setMissions(MissionManager* manager, Mission* missions);
+void setMissions(MissionManager* manager, MissionsData* missionsData);
 unsigned short missionAssigned(MissionManager* manager, uint8_t peopleNum);
 void completeInSuccess(MissionManager* manager, int missionNum);
 void completeInFailure(MissionManager* manager, int missionNum);

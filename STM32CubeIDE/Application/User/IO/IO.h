@@ -75,7 +75,7 @@
 
 typedef enum LuanchError{
 	NoError,
-	ElevStaysUp, /* right now not interesting */
+	ElevStaysUp,
 	ElevStaysDown,
 	SpikeNotFreeAndElevDown,
 	SpikeNotFreeAndElevUp,
@@ -105,6 +105,8 @@ void elev_down(uint8_t spike_num);
 uint8_t is_spike_up(uint8_t spike_num);
 
 uint8_t is_spike_mid(uint8_t spike_num);
+
+uint8_t is_BNET_on(uint8_t bnet_num);
 
 void turn_on_BNET(uint8_t bnet_num);
 

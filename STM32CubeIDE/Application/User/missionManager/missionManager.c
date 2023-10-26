@@ -16,15 +16,25 @@ void initializeMissionManager(MissionManager* manager) {
     sys_mutex_new(&(manager->mutex));
 }
 
-void setMissions(MissionManager* manager, Mission* missions) {
+uint8_t find_assignee_index(unsigned short *spikePerMissions, unsigned short missionToFind){
+    for (uint8_t i = 0; i < MAX_SPIKES * MAX_LAUNCH_COMP; ++i) {
+        if (spikePerMissions[i] == missionToFind) return i;
+    }
+    return -1;
+}
+
+void setMissions(MissionManager* manager, MissionsData* missionsData) {
     sys_mutex_lock(&(manager->mutex));
 
+    unsigned short spikePerMissions[MAX_SPIKES * MAX_LAUNCH_COMP];
+    memcpy(spikePerMissions, missionsData->spikePerMissions, sizeof(spikePerMissions)); // this is must be that way because of unaligned memory of struct missionsData
+
 	for (int i = 0; i < MAX_MISSIONS; ++i) {
-		manager->missions[i].mission_number = missions[i].mission_number;
-		manager->missions[i].priority = missions[i].priority;
-        manager->missions[i].assigned = false;
+        manager->missions[i].assigned_to = find_assignee_index(spikePerMissions, missionsData->missions[i]);
+		manager->missions[i].mission_number = missionsData->missions[i];
+		manager->missions[i].priority = 0;
+        manager->missions[i].assigned = manager->missions[i].assigned_to != -1 ? true : false;
         manager->missions[i].completed = false;
-        manager->missions[i].assigned_to = -1;
 	}
 	manager->missionsSets = true;
 
