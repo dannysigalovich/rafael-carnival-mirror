@@ -32,7 +32,7 @@ LaunchError launch(uint8_t spike){
 	}
 
 	if (status == ElevStaysDown){
-//		elev_down(spike);
+		elev_down(spike);
 		return ElevStaysDown;
 	}
 
@@ -41,7 +41,7 @@ LaunchError launch(uint8_t spike){
 	spikeData[spike].elevIsUp = true;
 	sys_msleep(ELEV_ACTION_WAIT);
 	spikeData[spike].elevIsUp = false;
-//	elev_down(spike);
+	elev_down(spike);
 
 
 //	if (is_spike_up(spike)){
@@ -87,26 +87,34 @@ void launchSequence(void *args){
 	}
 }
 
-uint8_t up, mid, down;
+uint8_t up, mid;
 
-void check_disc_with_buttons(uint8_t spike){
-	while (1){
-			up = is_spike_up(spike);
-			mid = is_spike_mid(spike);
+void check_disc_with_buttons(){
+	for (int i = 0; i < 4; ++i){
+		for (int j = 0 ; j < 2; ++j){
+			up = is_spike_up(i);
+			mid = is_spike_mid(i);
+		}
 	}
 }
 
-void check_up_down_with_leds(uint8_t spike){
-	while (1){
-		elev_up(spike);
-		elev_down(spike);
+void power_up_spike(){
+	for (int i = 0; i < 4; ++i){
+		turn_on_spike(i);
+	}
+}
+void check_up_down_with_leds(){
+	for (int i = 0; i < 4; ++i){
+		elev_up(i);
+		elev_down(i);
 	}
 }
 
 void startLaunchSequence(){
 /*############## TESTS ##############*/
-//	 check_disc_with_buttons(1);
-	// check_up_down_with_leds(2);
+//	 check_disc_with_buttons();
+//	 check_up_down_with_leds(2);
+//	power_up_sipike();
 /*###################################*/
 
 	sys_thread_new("luanchSeq", launchSequence, NULL, DEFAULT_THREAD_STACKSIZE, LAUNCH_SEQ_THREAD_PRIO);

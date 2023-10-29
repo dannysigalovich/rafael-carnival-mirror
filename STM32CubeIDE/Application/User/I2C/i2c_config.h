@@ -51,6 +51,7 @@ typedef struct SpikeTaskData{
    bool elevGoUp;
    bool elevIsUp;
    bool part_decision;  /* determine when to start the launch sequence for the spike (full decision is part_decision&&ELEV_IS_UP)*/
+   bool launchApprove;
 } SpikeTaskData;
 
 

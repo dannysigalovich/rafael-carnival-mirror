@@ -7,8 +7,6 @@
 
 #include "IO.h"
 
-
-uint8_t isLaunchStarted = 0;
 extern SpikeTaskData spikeData[MAX_SPIKES];
 
 
@@ -37,13 +35,13 @@ void elev_down(uint8_t spike_num){
 		HAL_GPIO_WritePin(SPIKE_1_GPIO_GROUP, SPIKE_1_UP_GPIO_PIN, !UP_DOWN_LOGIC_LEVEL);
 		break;
 	case 1:
-		HAL_GPIO_WritePin(SPIKE_2_GPIO_GROUP, SPIKE_1_UP_GPIO_PIN, !UP_DOWN_LOGIC_LEVEL);
+		HAL_GPIO_WritePin(SPIKE_2_GPIO_GROUP, SPIKE_2_UP_GPIO_PIN, !UP_DOWN_LOGIC_LEVEL);
 		break;
 	case 2:
-		HAL_GPIO_WritePin(SPIKE_3_GPIO_GROUP, SPIKE_1_UP_GPIO_PIN, !UP_DOWN_LOGIC_LEVEL);
+		HAL_GPIO_WritePin(SPIKE_3_GPIO_GROUP, SPIKE_3_UP_GPIO_PIN, !UP_DOWN_LOGIC_LEVEL);
 		break;
 	case 3:
-		HAL_GPIO_WritePin(SPIKE_4_GPIO_GROUP, SPIKE_1_UP_GPIO_PIN, !UP_DOWN_LOGIC_LEVEL);
+		HAL_GPIO_WritePin(SPIKE_4_GPIO_GROUP, SPIKE_4_UP_GPIO_PIN, !UP_DOWN_LOGIC_LEVEL);
 		break;
 	}
 }
@@ -132,8 +130,8 @@ void power_on_realy(){
 }
 
 
-uint8_t isLaunchSwitchOn(){
-	return isLaunchStarted;
+uint8_t isLaunchSwitchOn(uint8_t spike_num){
+	return spikeData[spike_num].launchApprove;
 }
 
 uint8_t is_launch_master(){
@@ -142,13 +140,5 @@ uint8_t is_launch_master(){
 
 void MasterToSlaveLaunch(){
 	HAL_GPIO_WritePin(LAUNCH_SLAVE_GROUP, LAUNCH_SLAVE_PIN, 0);
-}
-
-
-void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
-  if (GPIO_Pin == LAUNCH_GPIO_PIN){
-	  isLaunchStarted = 1;
-	  HAL_NVIC_DisableIRQ(EXTI9_5_IRQn);
-  }
 }
 

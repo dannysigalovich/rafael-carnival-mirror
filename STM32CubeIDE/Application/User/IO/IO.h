@@ -72,7 +72,6 @@
 #define LAUNCH_SLAVE_GROUP		GPIOG
 
 
-
 typedef enum LuanchError{
 	NoError,
 	ElevStaysUp,
@@ -84,11 +83,9 @@ typedef enum LuanchError{
 
 void GPIO_Config(void);
 
-uint8_t isLaunchSwitchOn();
+uint8_t isLaunchSwitchOn(uint8_t spike_num);
 
 void startLaunchSequence();
-
-void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin);
 
 void MasterToSlaveLaunch();
 

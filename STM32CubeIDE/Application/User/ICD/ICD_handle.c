@@ -75,13 +75,13 @@ void buildLaunchCmd(LaunchCmd *cmd){
 
 	uint8_t spike_num = getSpikeNumber(xTaskGetCurrentTaskHandle());
 
-	_Bool part_decision = spikeData[spike_num].currStatus.isReadyToLaunch && isLaunchSwitchOn();
+	_Bool part_decision = spikeData[spike_num].currStatus.isReadyToLaunch && isLaunchSwitchOn(spike_num);
 	_Bool decision = part_decision && spikeData[spike_num].elevIsUp;
 
-	cmd->missionId = missionAssigned(&misManager, spike_num);
-
+	cmd->missionId = 0; // just an healthy init
 
 	if (!decision && part_decision){
+		cmd->missionId = missionAssigned(&misManager, spike_num); 
 		spikeData[spike_num].part_decision = true;
 	}
 

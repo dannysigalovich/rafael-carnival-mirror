@@ -53,6 +53,7 @@ int findAssignedMission(MissionManager* manager, uint8_t peopleNum){
 
 /* returns the mission number assigned to the given peopleNum, or 0 if none 
    it will assign a new mission if there is a higher priority mission than the one assigned to the spike
+   TODO: Add Auto mode and Manual mode seperation and new logic of mission assignment
 */
 unsigned short missionAssigned(MissionManager* manager, uint8_t peopleNum) {
 	if (!manager->missionsSets || manager->isSpikeFail[peopleNum]) return 0; // in case we didnt get missions yet
@@ -71,6 +72,10 @@ unsigned short missionAssigned(MissionManager* manager, uint8_t peopleNum) {
         }
     }
 
+    /*
+        Elad: i comment it out because in this version there is no priority to the missions so no need in reassign 
+    */
+    #ifdef MISSIONS_PRIORIY 
     // if there is a higher priority mission than the one assigned to the spike, unassign the old one and assign the new one
     if (highestMissionIndex != -1 && oldMissionIndex != -1
         && manager->missions[highestMissionIndex].priority > manager->missions[oldMissionIndex].priority) {
@@ -79,8 +84,10 @@ unsigned short missionAssigned(MissionManager* manager, uint8_t peopleNum) {
         manager->missions[highestMissionIndex].assigned = true;
         manager->missions[highestMissionIndex].assigned_to = peopleNum;
     }
+    else 
+    #endif 
     // if there is no old mission assigned to the spike, assign the new one
-    else if (highestMissionIndex != -1 && oldMissionIndex == -1) {
+    if (highestMissionIndex != -1 && oldMissionIndex == -1) {
         manager->missions[highestMissionIndex].assigned = true;
         manager->missions[highestMissionIndex].assigned_to = peopleNum;
     }

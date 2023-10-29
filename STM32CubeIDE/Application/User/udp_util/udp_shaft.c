@@ -38,7 +38,6 @@
 /* Private variables ---------------------------------------------------------*/
 
 extern SpikeTaskData spikeData[MAX_SPIKES];
-extern uint8_t isLaunchStarted;
 char secret_words[2][MAX_SECRET_SIZE];
 CircularBuffer INSPVAXBuff;
 MissionManager misManager;
@@ -206,6 +205,19 @@ void beehive_setUp(BeehiveSetUpData *data){
   }
 }
 
+void update_launch_approval(LaunchReqData* data){
+  int spike_num = data->spikeNum;
+
+  if (spike_num == -1){
+    for (int i = 0; i < MAX_SPIKE; ++i){
+      spikeData[i].launchApprove = true;    
+    }
+  }
+  else if (spike_num < MAX_SPIKE){
+    spikeData[spike_num].launchApprove = true;
+  }
+}
+ 
 void parse_packet(struct pbuf *pbuf, const ip_addr_t *addr, u16_t port){
 
     if(INS_sync_check(pbuf)){
@@ -239,7 +251,7 @@ void parse_packet(struct pbuf *pbuf, const ip_addr_t *addr, u16_t port){
     	  beehive_setUp((BeehiveSetUpData *)packet->data);
         break;
       case LaunchReq:
-    	  isLaunchStarted = true;
+    	  update_launch_approval((LaunchReqData *) packet->data);
     	  break;
       default:
         break;
