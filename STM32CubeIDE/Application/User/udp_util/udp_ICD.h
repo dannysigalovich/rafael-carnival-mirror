@@ -38,7 +38,8 @@ typedef enum UdpMsgType{
     LiveLogResp = 6,
     LogListResp = 7, // not Relevant
     LogFileResp = 8, // not Relevant
-	LaunchReq = 9
+	LaunchReq = 9,
+	BeehiveLoadReq = 10,
 } MsgType;
 
 
@@ -50,8 +51,11 @@ typedef struct PACKED UdpPacket{
 
 typedef struct PACKED LaunchReqData{
     int spikeNum; // which spike to launch (-1 indicate Auto mode - launch all)
-} LaunchReqData;
+} LaunchReqData; // it's dumm to make it an int and not int8_t but its for easy development
 
+typedef struct PACKED BeehiveLoadData{
+	int8_t spikeToLoad[MAX_SPIKES]; // req to load spike into slots (1 is elevator up, 0 - none, -1 - elevator down)
+} BeehiveLoadData;
 
 typedef struct PACKED BeehiveSetUpData{
     uint8_t turnOnSpikes[MAX_SPIKES]; // those are the spikes that are (1 - exist, 0 - not) in the beehive and should turn on

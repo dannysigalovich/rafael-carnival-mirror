@@ -217,6 +217,17 @@ void update_launch_approval(LaunchReqData* data){
     spikeData[spike_num].launchApprove = true;
   }
 }
+
+void load_spike(BeehiveLoadData *data){
+  for (int i = 0; i < MAX_SPIKES; ++i){
+    if (data->spikeToLoad[i] == 1){
+      elev_up(i);
+    }
+    else if (data->spikeToLoad[i] == -1){
+      elev_down(i);
+    }
+  }
+}
  
 void parse_packet(struct pbuf *pbuf, const ip_addr_t *addr, u16_t port){
 
@@ -252,6 +263,9 @@ void parse_packet(struct pbuf *pbuf, const ip_addr_t *addr, u16_t port){
         break;
       case LaunchReq:
     	  update_launch_approval((LaunchReqData *) packet->data);
+    	  break;
+      case BeehiveLoadReq:
+    	  load_spike((BeehiveLoadData *) packet->data);
     	  break;
       default:
         break;
