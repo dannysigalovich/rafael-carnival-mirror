@@ -58,8 +58,8 @@ typedef struct PACKED BeehiveLoadData{
 } BeehiveLoadData;
 
 typedef struct PACKED BeehiveSetUpData{
-    uint8_t turnOnSpikes[MAX_SPIKES]; // those are the spikes that are (1 - exist, 0 - not) in the beehive and should turn on
-    uint8_t turnOnBnet[MAX_BNET]; // those are the BNET we should enable
+    int8_t turnOnSpikes[MAX_SPIKES]; // those are the spikes that are (1 - exist, 0 - not) in the beehive and should turn on
+    int8_t turnOnBnet[MAX_BNET]; // those are the BNET we should enable
 } BeehiveSetUpData;
 
 typedef struct PACKED MissionsData{

@@ -1,5 +1,5 @@
 /*
- * monitor_helper.c
+ * IO_cmd.c
  *
  *  Created on: Aug 31, 2023
  *      Author: eladsez
@@ -12,6 +12,7 @@ extern SpikeTaskData spikeData[MAX_SPIKES];
 
 
 void elev_up(uint8_t spike_num){
+	spikeData[spike_num].elevGoUp = true;
 	switch(spike_num){
 	case 0:
 		HAL_GPIO_WritePin(SPIKE_1_GPIO_GROUP, SPIKE_1_UP_GPIO_PIN, UP_DOWN_LOGIC_LEVEL);
@@ -29,7 +30,7 @@ void elev_up(uint8_t spike_num){
 }
 
 void elev_down(uint8_t spike_num){
-
+	spikeData[spike_num].elevGoUp = false; // just in case is coming from the udp_icd
 	switch(spike_num){
 	case 0:
 		HAL_GPIO_WritePin(SPIKE_1_GPIO_GROUP, SPIKE_1_UP_GPIO_PIN, !UP_DOWN_LOGIC_LEVEL);
@@ -76,6 +77,17 @@ void turn_on_BNET(uint8_t bnet_num){
 	case 1:
 		HAL_GPIO_WritePin(SPIKE_2_GPIO_GROUP, BNET2_PWR_GPIO_PIN, SPIKE_PWR_LOGIC_LEVEL);
 		break;
+	}
+}
+
+void turn_off_BNET(uint8_t bnet_num){
+	switch (bnet_num){
+		case 0:
+			HAL_GPIO_WritePin(SPIKE_1_GPIO_GROUP, BNET1_PWR_GPIO_PIN, !SPIKE_PWR_LOGIC_LEVEL);
+			break;
+		case 1:
+			HAL_GPIO_WritePin(SPIKE_2_GPIO_GROUP, BNET2_PWR_GPIO_PIN, !SPIKE_PWR_LOGIC_LEVEL);
+			break;
 	}
 }
 

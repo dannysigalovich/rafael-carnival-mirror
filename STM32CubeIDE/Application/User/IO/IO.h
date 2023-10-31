@@ -107,6 +107,8 @@ uint8_t is_BNET_on(uint8_t bnet_num);
 
 void turn_on_BNET(uint8_t bnet_num);
 
+void turn_off_BNET(uint8_t bnet_num);
+
 void turn_on_spike(uint8_t spike_num);
 
 #endif /* APPLICATION_USER_IO_IO_H_ */

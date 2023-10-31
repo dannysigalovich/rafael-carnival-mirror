@@ -19,8 +19,6 @@ LaunchError launch(uint8_t spike){
 
 	LaunchError status = ElevStaysDown;
 
-	spikeData[spike].elevGoUp = true;
-
 	elev_up(spike);
 
 	uint32_t start = HAL_GetTick();
@@ -110,11 +108,19 @@ void check_up_down_with_leds(){
 	}
 }
 
+void check_bnets(){
+	for (int i = 0; i < 2; ++i){
+			turn_on_BNET(i);
+			turn_off_BNET(i);
+	}
+}
+
 void startLaunchSequence(){
 /*############## TESTS ##############*/
 //	 check_disc_with_buttons();
 //	 check_up_down_with_leds(2);
 //	power_up_sipike();
+//	check_bnets();
 /*###################################*/
 
 	sys_thread_new("luanchSeq", launchSequence, NULL, DEFAULT_THREAD_STACKSIZE, LAUNCH_SEQ_THREAD_PRIO);

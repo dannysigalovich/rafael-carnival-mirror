@@ -107,12 +107,12 @@ void udp_shaft_thread(void* arg)
   if (send_pcb){
     while(1){
       handle_send(send_pcb);
-      sys_msleep(5); /* for the cpu to not get stuck */
+      sys_msleep(900); /* for the cpu to not get stuck */
     }
   }
 
   while(1){ /* in case the send pcb failed to create */
-    sys_msleep(5); /* for the cpu to not get stuck */
+    sys_msleep(20); /* for the cpu to not get stuck */
   }
 }
 
@@ -128,7 +128,7 @@ int build_live_log(uint8_t *buff, uint32_t size){
 		live.BITStatus[i] = spikeData[i].currStatus.BITStatus;
 		live.isReadyToLaunch[i] = spikeData[i].currStatus.isReadyToLaunch;
 		live.elevGoUp[i] = spikeData[i].elevGoUp;
-		live.elevIsUp[i] = spikeData[i].elevGoUp;
+		live.elevIsUp[i] = is_spike_up(i);
 	}
 
 	for (int i = 0; i < MAX_BNET; ++i){
@@ -201,6 +201,9 @@ void beehive_setUp(BeehiveSetUpData *data){
   for (int i = 0; i < MAX_BNET; ++i){
     if (data->turnOnBnet[i] == Init){
       turn_on_BNET(i);
+    }
+    else if (data->turnOnBnet[i] == -Init){
+      turn_off_BNET(i);
     }
   }
 }

@@ -134,7 +134,11 @@ static void Netif_Config(void)
   ip_addr_t netmask;
   ip_addr_t gw;
 
-  uint8_t IP_ADDR3 = is_launch_master() ? 10U : 11U;
+  uint8_t IP_ADDR3;
+  if (is_launch_master())
+	  IP_ADDR3 = IP_ADDR3_MASTER;
+  else
+	  IP_ADDR3 = IP_ADDR3_SLAVE;
 
 #if LWIP_DHCP
   ip_addr_set_zero_ip4(&ipaddr);

@@ -36,7 +36,9 @@
 #define IP_ADDR0   ((uint8_t)192U)
 #define IP_ADDR1   ((uint8_t)168U)
 #define IP_ADDR2   ((uint8_t)1U)
-// #define IP_ADDR3   ((uint8_t)10U)  last version it was decalerd like this now is more dynamic (according to Master Launch)
+/* #define IP_ADDR3   ((uint8_t)10U)  last version it was decalerd like this now is dynamic (according to Master Launch) */
+#define IP_ADDR3_MASTER ((uint8_t)10U)
+#define IP_ADDR3_SLAVE ((uint8_t)11U)
 #define UDP_PORT	7
 
 /*NETMASK*/
