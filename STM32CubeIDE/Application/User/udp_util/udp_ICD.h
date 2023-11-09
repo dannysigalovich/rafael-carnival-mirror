@@ -41,8 +41,6 @@ typedef enum UdpMsgType{
 	LaunchReq = 9,
 	BeehiveLoadReq = 10,
     SetClocks = 11,
-    SensorsReadReq = 12,
-    SensorsReadResp = 13,
 } MsgType;
 
 
@@ -85,6 +83,9 @@ typedef struct PACKED LiveLogData{ // send over udp when asked for
     char isLaunchedSuccesfully[MAX_SPIKES]; // 0 - not launched yet, 1 - launched successfully, -1 - launch failed
 	char elevGoUp[MAX_SPIKES];
 	char elevIsUp[MAX_SPIKES];
+    uint16_t pressureSens;
+    uint16_t currentSens;
+    uint16_t voltageSens;
 } LiveLog;
 
 typedef struct PACKED SensorsReadData{ // send over udp when asked for

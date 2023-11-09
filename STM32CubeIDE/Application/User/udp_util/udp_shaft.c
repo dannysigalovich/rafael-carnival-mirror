@@ -131,6 +131,9 @@ int build_live_log(uint8_t *buff, uint32_t size){
 		live.isReadyToLaunch[i] = spikeData[i].currStatus.isReadyToLaunch;
 		live.elevGoUp[i] = spikeData[i].elevGoUp;
 		live.elevIsUp[i] = is_spike_up(i);
+		live.pressureSens = ADC_read_pressure();
+		live.currentSens = ADC_read_current();
+		live.voltageSens = ADC_read_voltage();
 	}
 
 	for (int i = 0; i < MAX_BNET; ++i){
@@ -157,13 +160,6 @@ void handle_send(struct udp_pcb *send_pcb){
     packet.msgType = LogListResp;
     dataSize = list_log_files((char *)packet.data, MAX_UDP_DATA_SIZE);
     send_flag.send_log_list = false;
-  }
-  else if (send_flag.send_sensor_read){
-    packet.msgType = SensorsReadResp;
-    SensorsReadData data = {ADC_read_pressure(), ADC_read_current(), ADC_read_voltage()};
-    dataSize = sizeof(SensorsReadData);
-    memcpy(packet.data, &data, dataSize);
-    send_flag.send_sensor_read = false;
   }
   else if (send_flag.send_live){
     packet.msgType = LiveLogResp;
@@ -290,10 +286,6 @@ void parse_packet(struct pbuf *pbuf, const ip_addr_t *addr, u16_t port){
       case SetClocks:
         setClocks((SetClocksData *) packet->data);
       	break;
-      case SensorsReadReq:
-        send_flag.send_sensor_read = true;
-        CPY_ADDR(addr, port);
-        break;
       default:
         break;
     }
