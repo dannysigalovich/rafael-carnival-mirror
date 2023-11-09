@@ -31,6 +31,7 @@ LaunchError launch(uint8_t spike){
 
 	if (status == ElevStaysDown){
 		elev_down(spike);
+		spikeData[spike].elevGoUp = false;
 		return ElevStaysDown;
 	}
 
@@ -98,7 +99,7 @@ void check_disc_with_buttons(){
 
 void power_up_spike(){
 	for (int i = 0; i < 4; ++i){
-		turn_on_spike(i);
+		turn_spike(i, SPIKE_PWR_LOGIC_LEVEL);
 	}
 }
 void check_up_down_with_leds(){

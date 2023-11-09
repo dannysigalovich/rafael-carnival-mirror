@@ -38,7 +38,7 @@
 #define IP_ADDR2   ((uint8_t)1U)
 /* #define IP_ADDR3   ((uint8_t)10U)  last version it was decalerd like this now is dynamic (according to Master Launch) */
 #define IP_ADDR3_MASTER ((uint8_t)10U)
-#define IP_ADDR3_SLAVE ((uint8_t)11U)
+#define IP_ADDR3_SLAVE ((uint8_t)10U) // TODO: change to 11 when 2 launch computer is used
 #define UDP_PORT	7
 
 /*NETMASK*/

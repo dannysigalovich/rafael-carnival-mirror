@@ -40,6 +40,9 @@ typedef enum UdpMsgType{
     LogFileResp = 8, // not Relevant
 	LaunchReq = 9,
 	BeehiveLoadReq = 10,
+    SetClocks = 11,
+    SensorsReadReq = 12,
+    SensorsReadResp = 13,
 } MsgType;
 
 
@@ -67,6 +70,12 @@ typedef struct PACKED MissionsData{
     unsigned short missions[MAX_MISSIONS];
 } MissionsData;
 
+typedef struct PACKED SetClocksData{
+    uint32_t UP_DOWN_PULL_TIME; /* The time we set the elevator pins to pull up in ms */
+    uint32_t ELEV_TIMEOUT;  /* The time to wait for the elevator when going up or down until timeout */
+    uint32_t ELEV_ACTION_WAIT; /* time to wait when the elevator is up until we pull the elevator down again (wait x sec in the state machine) */
+} SetClocksData;
+
 typedef struct PACKED LiveLogData{ // send over udp when asked for
     uint8_t isSpikeInitialized[MAX_SPIKES];
     uint8_t isBnetInitialized[MAX_BNET];
@@ -77,6 +86,12 @@ typedef struct PACKED LiveLogData{ // send over udp when asked for
 	char elevGoUp[MAX_SPIKES];
 	char elevIsUp[MAX_SPIKES];
 } LiveLog;
+
+typedef struct PACKED SensorsReadData{ // send over udp when asked for
+    uint16_t pressure;
+    uint16_t current;
+    uint16_t voltage;
+} SensorsReadData;
 
 
 #endif /* UDP_ICD_H_ */

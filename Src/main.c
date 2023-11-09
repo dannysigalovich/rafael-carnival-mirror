@@ -17,6 +17,7 @@
 #include "udp_util/udp_conf.h"
 #include "lwip/tcpip.h"
 #include "logger/logger.h"
+#include "IO/analog_digital/ADC.h"
 
 //#define TREGO_DEBUG
 
@@ -68,6 +69,8 @@ int main(void)
   BSP_Config();
 
   GPIO_Config();
+
+  ADC_Init();
 
   Logger_Init();
 

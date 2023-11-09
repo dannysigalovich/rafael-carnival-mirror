@@ -47,25 +47,30 @@ void elev_down(uint8_t spike_num){
 	}
 }
 
-void turn_on_spike(uint8_t spike_num){
+void turn_spike(uint8_t spike_num, uint8_t logic_level){
 
 	switch(spike_num){
 	case 0:
-		HAL_GPIO_WritePin(SPIKE1_DISC_GPIO_GROUP, SPIKE1_PWR_PIN, SPIKE_PWR_LOGIC_LEVEL);
+		HAL_GPIO_WritePin(SPIKE1_DISC_GPIO_GROUP, SPIKE1_PWR_PIN, logic_level);
 		break;
 	case 1:
-		HAL_GPIO_WritePin(SPIKE2_PWR_GPIO_GROUP, SPIKE2_PWR_PIN, SPIKE_PWR_LOGIC_LEVEL);
+		HAL_GPIO_WritePin(SPIKE2_PWR_GPIO_GROUP, SPIKE2_PWR_PIN, logic_level);
 		break;
 	case 2:
-		HAL_GPIO_WritePin(SPIKE3_DISC_GPIO_GROUP, SPIKE3_PWR_PIN, SPIKE_PWR_LOGIC_LEVEL);
+		HAL_GPIO_WritePin(SPIKE3_DISC_GPIO_GROUP, SPIKE3_PWR_PIN, logic_level);
 		break;
 	case 3:
-		HAL_GPIO_WritePin(SPIKE4_DISC_GPIO_GROUP, SPIKE4_PWR_PIN, SPIKE_PWR_LOGIC_LEVEL);
+		HAL_GPIO_WritePin(SPIKE4_DISC_GPIO_GROUP, SPIKE4_PWR_PIN, logic_level);
 		break;
 	default:
 		return;
 	}
-	spikeData[spike_num].initState = SpikeRelayStarted;
+	if (logic_level == SPIKE_PWR_LOGIC_LEVEL){
+		spikeData[spike_num].initState = SpikeRelayStarted;
+	}
+	else {
+		spikeData[spike_num].initState = NoInit;
+	}
 }
 
 void turn_on_BNET(uint8_t bnet_num){

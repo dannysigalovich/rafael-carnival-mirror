@@ -23,6 +23,7 @@
 #include "logger/logger.h"
 #include "udp_ICD.h"
 #include "IO/IO.h"
+#include "IO/analog_digital/ADC.h"
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
@@ -49,6 +50,7 @@ struct send_flag{
 	uint32_t req_log_count; /* The requested log file */
 	bool send_log_list;
 	bool send_live;
+  bool send_sensor_read;
 } send_flag = {0};
 
 
@@ -142,30 +144,37 @@ int build_live_log(uint8_t *buff, uint32_t size){
 
 void handle_send(struct udp_pcb *send_pcb){
   
-  int size = 0;
+  int dataSize = 0;
   UdpPacket packet;
   CONSTRUCT_SYNC(packet.sync);
 
-  if (send_flag.send_live){
-    packet.msgType = LiveLogResp;
-    size = build_live_log(packet.data, MAX_UDP_DATA_SIZE);
-  }
-  else if (send_flag.send_log){
+  if (send_flag.send_log){
     packet.msgType = LogFileResp;
-    size = read_log((char *)packet.data, send_flag.req_log_count, MAX_UDP_DATA_SIZE);
+    dataSize = read_log((char *)packet.data, send_flag.req_log_count, MAX_UDP_DATA_SIZE);
     send_flag.send_log = false;
   }
   else if (send_flag.send_log_list){
     packet.msgType = LogListResp;
-    size = list_log_files((char *)packet.data, MAX_UDP_DATA_SIZE);
+    dataSize = list_log_files((char *)packet.data, MAX_UDP_DATA_SIZE);
     send_flag.send_log_list = false;
+  }
+  else if (send_flag.send_sensor_read){
+    packet.msgType = SensorsReadResp;
+    SensorsReadData data = {ADC_read_pressure(), ADC_read_current(), ADC_read_voltage()};
+    dataSize = sizeof(SensorsReadData);
+    memcpy(packet.data, &data, dataSize);
+    send_flag.send_sensor_read = false;
+  }
+  else if (send_flag.send_live){
+    packet.msgType = LiveLogResp;
+    dataSize = build_live_log(packet.data, MAX_UDP_DATA_SIZE);
   }
   else{
     return;
   }
 
 
-  if (size < 0) return;
+  if (dataSize < 0) return;
 
   /* allocate pbuf from RAM*/
   struct pbuf *p_tx = pbuf_alloc(PBUF_TRANSPORT, sizeof(UdpPacket), PBUF_RAM);
@@ -192,10 +201,13 @@ void beehive_setUp(BeehiveSetUpData *data){
   for (int i = 0; i < MAX_SPIKES; ++i){
     if (data->turnOnSpikes[i] == Init && spikeData[i].initState == NoInit){
       spikeData[i].initState = Init;
-      I2C_start_listen(i);
-      turn_on_spike(i);
+      // I2C_start_listen(i);
+      turn_spike(i, SPIKE_PWR_LOGIC_LEVEL);
       spikeData[i].initState = spikeData[i].initState == SpikeRelayStarted ?
                                Done : spikeData[i].initState;
+    }
+    else if(data->turnOnSpikes[i] == -Init){
+      turn_spike(i, !SPIKE_PWR_LOGIC_LEVEL);
     }
   }
   for (int i = 0; i < MAX_BNET; ++i){
@@ -231,6 +243,11 @@ void load_spike(BeehiveLoadData *data){
     }
   }
 }
+
+void setClocks(SetClocksData *data){ // TOD: implement
+  
+}
+
  
 void parse_packet(struct pbuf *pbuf, const ip_addr_t *addr, u16_t port){
 
@@ -270,6 +287,13 @@ void parse_packet(struct pbuf *pbuf, const ip_addr_t *addr, u16_t port){
       case BeehiveLoadReq:
     	  load_spike((BeehiveLoadData *) packet->data);
     	  break;
+      case SetClocks:
+        setClocks((SetClocksData *) packet->data);
+      	break;
+      case SensorsReadReq:
+        send_flag.send_sensor_read = true;
+        CPY_ADDR(addr, port);
+        break;
       default:
         break;
     }
