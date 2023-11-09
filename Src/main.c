@@ -105,7 +105,7 @@ static void StartThread(void const *argument)
 
   init_udp_broker();
 
-  startLaunchSequence();
+  // startLaunchSequence();
 
   for (;;)
   {
